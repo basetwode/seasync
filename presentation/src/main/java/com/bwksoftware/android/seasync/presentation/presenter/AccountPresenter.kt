@@ -25,7 +25,7 @@ import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
 import com.bwksoftware.android.seasync.domain.interactor.GetAllAccounts
 import com.bwksoftware.android.seasync.presentation.R
-import com.bwksoftware.android.seasync.presentation.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.internal.di.scope.PerActivity
 import com.bwksoftware.android.seasync.presentation.mapper.AccountModelMapper
 import com.bwksoftware.android.seasync.presentation.model.NavBaseItem

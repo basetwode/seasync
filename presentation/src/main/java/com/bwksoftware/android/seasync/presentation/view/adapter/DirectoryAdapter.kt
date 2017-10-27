@@ -86,6 +86,8 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
         val item = mItems[position]
 
         if (holder is FileHolder && item is FileItem) {
+            holder.syncedImg.visibility = if (item.synced) View.VISIBLE else View.GONE
+
             holder.itemName.text = item.name
             holder.itemDateSize.text = FileUtils.readableFileSize(
                     item.size!!) + ", " + FileUtils.translateCommitTime(item.mtime!! * 1000,
@@ -99,6 +101,8 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
                 holder.itemImg.setImageResource(R.drawable.empty_profile)
 
         } else if (holder is DirectoryHolder && item is DirectoryItem) {
+            holder.syncedImg.visibility = if (item.synced) View.VISIBLE else View.GONE
+
             holder.itemImg.setImageResource(R.drawable.folder)
             holder.itemName.text = item.name
             holder.itemDateMod.text = FileUtils.translateCommitTime(item.mtime!! * 1000, context)
@@ -119,7 +123,7 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
             val item: Item = mItems[layoutPosition]
             onItemClickLister.onFileClicked(item)
         }
-
+        val syncedImg: ImageView = itemView.findViewById(R.id.synced_img)
         val itemImg: ImageView = itemView.findViewById(R.id.file_img)
         val itemName: TextView = itemView.findViewById(R.id.file_name)
         val itemDateSize: TextView = itemView.findViewById(R.id.file_datesize)
@@ -140,6 +144,7 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
 
         val itemImg: ImageView = itemView.findViewById(R.id.directory_img)
         val itemName: TextView = itemView.findViewById(R.id.directory_name)
+        val syncedImg: ImageView = itemView.findViewById(R.id.synced_img)
         val itemDateMod: TextView = itemView.findViewById(R.id.directory_datemodified)
     }
 

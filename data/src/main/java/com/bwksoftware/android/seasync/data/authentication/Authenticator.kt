@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.bwksoftware.android.seasync.presentation.authentication
+package com.bwksoftware.android.seasync.data.authentication
 
 import android.accounts.AbstractAccountAuthenticator
 import android.accounts.Account
@@ -25,9 +25,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
-import com.bwksoftware.android.seasync.presentation.BuildConfig
-import com.bwksoftware.android.seasync.presentation.R
-import com.bwksoftware.android.seasync.presentation.view.activity.AccountActivity
+import com.bwksoftware.android.seasync.data.R
 import javax.inject.Inject
 
 
@@ -62,9 +60,9 @@ class Authenticator @Inject constructor(val mContext: Context) : AbstractAccount
             return result
         }
 
-        val intent = Intent(mContext, AccountActivity::class.java)
+        val intent = Intent(mContext, this::class.java)
         intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
-        intent.putExtra(BuildConfig.APPLICATION_ID, account?.type)
+        intent.putExtra(mContext.getString(R.string.authtype), account?.type)
 
         val retBundle = Bundle()
         retBundle.putParcelable(AccountManager.KEY_INTENT, intent)
@@ -84,9 +82,9 @@ class Authenticator @Inject constructor(val mContext: Context) : AbstractAccount
     override fun addAccount(response: AccountAuthenticatorResponse?, accountType: String?,
                             authTokenType: String?, requiredFeatures: Array<out String>?,
                             options: Bundle?): Bundle {
-        val intent = Intent(mContext, AccountActivity::class.java)
+        val intent = Intent(mContext, this::class.java)
         // This key can be anything. Try to use your domain/package
-        intent.putExtra(BuildConfig.APPLICATION_ID, accountType)
+        intent.putExtra(mContext.getString(R.string.authtype), accountType)
         // Copy this exactly from the line below.
         intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
         val bundle = Bundle()

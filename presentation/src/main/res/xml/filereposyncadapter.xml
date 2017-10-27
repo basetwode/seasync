@@ -2,7 +2,7 @@
 <sync-adapter
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:contentAuthority="com.bwksoftware.android.seasync.data.sync"
-    android:accountType="com.bwksoftware.android.seasync.presentation"
+    android:accountType="@string/authtype"
     android:userVisible="true"
     android:supportsUploading="true"
     android:allowParallelSyncs="false"

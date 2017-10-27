@@ -69,6 +69,6 @@ class ApplicationModule(private val androidApplication: App) {
     @Singleton
     fun provideDataRepository(dataRepository: DataRepository): Repository {
         return dataRepository
-
     }
+
 }

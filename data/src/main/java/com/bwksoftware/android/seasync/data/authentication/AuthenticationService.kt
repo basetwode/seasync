@@ -14,11 +14,12 @@
  *    limitations under the License.
  */
 
-package com.bwksoftware.android.seasync.presentation.authentication
+package com.bwksoftware.android.seasync.data.authentication
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 
 
 /**
@@ -31,6 +32,7 @@ class AuthenticatorService : Service() {
     private var mAuthenticator: Authenticator? = null
 
     override fun onCreate() {
+        Log.d("AuthenticatorService", "oncreate called")
         // Create a new authenticator object
         mAuthenticator = Authenticator(this)
     }

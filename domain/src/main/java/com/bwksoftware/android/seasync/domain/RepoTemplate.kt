@@ -17,5 +17,6 @@
 package com.bwksoftware.android.seasync.domain
 
 
-class RepoTemplate(val id: String?, val name: String?, val permission: String?, val owner: String?,val encrypted: Boolean?,
-                   val mtime: Long?, val size: Long?)
+class RepoTemplate(val id: String?, val name: String?, val permission: String?, val owner: String?,
+                   val encrypted: Boolean?,
+                   val mtime: Long?, val size: Long?, val synced: Boolean, val storage: String)

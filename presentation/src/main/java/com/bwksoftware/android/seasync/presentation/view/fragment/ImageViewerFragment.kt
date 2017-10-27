@@ -26,7 +26,7 @@ import android.view.View.OnTouchListener
 import android.widget.RelativeLayout
 import android.widget.TextView
 import com.bwksoftware.android.seasync.presentation.R
-import com.bwksoftware.android.seasync.presentation.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.ImageViewerPresenter
 import com.bwksoftware.android.seasync.presentation.utils.FileUtils

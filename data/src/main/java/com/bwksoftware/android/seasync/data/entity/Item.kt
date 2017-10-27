@@ -18,9 +18,10 @@ package com.bwksoftware.android.seasync.data.entity
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import java.util.*
 
 
-class Item {
+class Item : Syncable() {
     @SerializedName("id")
     @Expose
     open var id: String? = null
@@ -59,9 +60,43 @@ class Item {
     open var size: Long = 0
 
 
-    open var dbId: Long? = null
-    open var path: String? = null
-    open var parent: Item? = null
-    open var synced: Boolean? = null
-    open var storage: String? = null
+    var parent: Item? = null
+    open var repoId: Long? = null
+
+    val childItems = LinkedList<Item>()
+    var parentItem: Item? = null
+
+    fun areChildItemsSynced(mtime: Long): Boolean {
+        var result = true
+        for (child in childItems)
+            result = if (result) mtime == child.mtime else false
+        return result
+    }
+
+    fun setAndUpdateParent(parent: Item) {
+        parentItem = parent
+        parent.childItems.add(this)
+    }
+
+    companion object {
+        fun copy(item: Item): Item {
+            val newItem = Item()
+            newItem.id = item.id
+            newItem.modifierName = item.modifierName
+            newItem.modifierEmail = item.modifierEmail
+            newItem.permission = item.permission
+            newItem.modifierContactEmail = item.modifierContactEmail
+            newItem.type = item.type
+            newItem.mtime = item.mtime
+            newItem.name = item.name
+            newItem.size = item.size
+            newItem.path = item.path
+            newItem.parent = item.parent
+            newItem.synced = item.synced
+            newItem.storage = item.storage
+            newItem.repoId = item.repoId
+            return newItem
+        }
+    }
+
 }

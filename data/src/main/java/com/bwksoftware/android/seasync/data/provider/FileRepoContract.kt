@@ -37,6 +37,9 @@ class FileRepoContract {
             val HASH = "repo_hash"
             val MOD_DATE = "repo_mod_date"
             val FULL_SYNCED = "repo_full_sync"
+            val REPO_ID = "repo_id"
+            val STORAGE = "repo_storage"
+
         }
     }
 
@@ -70,6 +73,7 @@ class FileRepoContract {
             val REMOTE_ID = "file_remote_id"
             val SYNCED = "file_synced"
             val STORAGE = "file_storage"
+            val ACCOUNT = "file_account"
         }
     }
 }

@@ -20,7 +20,7 @@ import android.util.Log
 import com.bwksoftware.android.seasync.domain.RepoTemplate
 import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
 import com.bwksoftware.android.seasync.domain.interactor.GetRepoList
-import com.bwksoftware.android.seasync.presentation.authentication.Authenticator
+import com.bwksoftware.android.seasync.data.authentication.Authenticator
 import com.bwksoftware.android.seasync.presentation.mapper.RepoModelMapper
 import com.bwksoftware.android.seasync.presentation.view.views.RepoView
 import javax.inject.Inject

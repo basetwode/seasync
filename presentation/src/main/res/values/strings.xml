@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Seasync</string>
+    <string name="app_name">SeaSync</string>
     <string name="authtype">com.bwksoftware.android.seasync.presentation</string>
     <string name="drawer_open">Open</string>
     <string name="drawer_close">Close</string>

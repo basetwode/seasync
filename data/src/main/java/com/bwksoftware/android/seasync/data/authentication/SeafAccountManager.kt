@@ -1,16 +1,16 @@
-package com.bwksoftware.android.seasync.presentation.authentication
+package com.bwksoftware.android.seasync.data.authentication
 
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.content.ContentResolver
 import android.content.Context
 import android.util.Log
+import com.bwksoftware.android.seasync.data.R
 import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
-import com.bwksoftware.android.seasync.presentation.BuildConfig
-import com.bwksoftware.android.seasync.presentation.R
 import javax.inject.Inject
+import javax.inject.Singleton
 
-
+@Singleton
 class SeafAccountManager @Inject constructor(val authenticator: Authenticator,
                                              val context: Context,
                                              val sharedPrefsController: SharedPrefsController) {
@@ -32,8 +32,8 @@ class SeafAccountManager @Inject constructor(val authenticator: Authenticator,
         val accountManager = AccountManager.get(context)
         val currentAccountName = sharedPrefsController.getPreference(
                 SharedPrefsController.Preference.CURRENT_USER_ACCOUNT)
-        var accounts = accountManager.getAccountsByType(BuildConfig.APPLICATION_ID)
-        if (accounts.isEmpty())
+        var accounts = accountManager.getAccountsByType(context.getString(R.string.authtype))
+        if (accounts.isEmpty() || currentAccountName=="None")
             accounts += Account("None", context.getString(R.string.authtype))
         return accounts.sortedWith(Comparator { o1, _ ->
             if (o1.name == currentAccountName) -1 else 0

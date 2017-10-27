@@ -8,11 +8,10 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.BaseColumns
 import com.bwksoftware.android.seasync.data.db.DBHelper
-import javax.inject.Inject
 
 class FileRepoContentProvider : ContentProvider() {
 
-    @Inject lateinit var dbHelper: DBHelper
+    private lateinit var dbHelper: DBHelper
     private val uriMatcher = buildUriMatcher()
 
     override fun insert(uri: Uri?, contentValues: ContentValues?): Uri {
@@ -95,6 +94,7 @@ class FileRepoContentProvider : ContentProvider() {
     }
 
     override fun onCreate(): Boolean {
+        dbHelper = DBHelper(context)
         return true
     }
 
@@ -102,9 +102,9 @@ class FileRepoContentProvider : ContentProvider() {
                         selectionArgs: Array<out String>?): Int {
         val db = dbHelper.writableDatabase
         val rows = when (uriMatcher.match(uri)) {
-            REPO -> db.update(FileRepoContract.RepoColumns.TABLE_NAME, contentValues, selection,
+            REPO_ID -> db.update(FileRepoContract.RepoColumns.TABLE_NAME, contentValues, selection,
                     selectionArgs)
-            FILE -> db.update(FileRepoContract.FileColumns.TABLE_NAME, contentValues, selection,
+            FILE_ID -> db.update(FileRepoContract.FileColumns.TABLE_NAME, contentValues, selection,
                     selectionArgs)
             else -> throw UnsupportedOperationException("Unknown Uri: " + uri)
         }
@@ -117,9 +117,9 @@ class FileRepoContentProvider : ContentProvider() {
     override fun delete(uri: Uri?, selection: String?, selectionArgs: Array<out String>?): Int {
         val db = dbHelper.writableDatabase
         val rows = when (uriMatcher.match(uri)) {
-            REPO -> db.delete(FileRepoContract.RepoColumns.TABLE_NAME, selection,
+            REPO_ID -> db.delete(FileRepoContract.RepoColumns.TABLE_NAME, selection,
                     selectionArgs)
-            FILE -> db.delete(FileRepoContract.FileColumns.TABLE_NAME, selection,
+            FILE_ID -> db.delete(FileRepoContract.FileColumns.TABLE_NAME, selection,
                     selectionArgs)
             else -> throw UnsupportedOperationException("Unknown Uri: " + uri)
         }

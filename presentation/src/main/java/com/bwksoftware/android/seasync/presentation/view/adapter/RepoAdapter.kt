@@ -63,6 +63,7 @@ class RepoAdapter(val onItemClickLister: OnItemClickListener,
 
         holder.repoImg.setImageDrawable(context.getDrawable(item.drawable!!))
         holder.repoName.text = item.name
+        holder.syncedImg.visibility = if (item.synced) View.VISIBLE else View.GONE
         holder.repoDateModified.text = FileUtils.translateCommitTime(item.mtime!! * 1000, context)
 
     }
@@ -82,6 +83,7 @@ class RepoAdapter(val onItemClickLister: OnItemClickListener,
         }
 
         val repoImg: ImageView = itemView.findViewById(R.id.repo_img)
+        val syncedImg: ImageView = itemView.findViewById(R.id.synced_img)
         val repoName: TextView = itemView.findViewById(R.id.repo_name)
         val repoDateModified: TextView = itemView.findViewById(R.id.repo_datemodified)
 

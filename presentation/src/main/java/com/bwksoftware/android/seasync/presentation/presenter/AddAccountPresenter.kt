@@ -21,8 +21,8 @@ import android.util.Log
 import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
 import com.bwksoftware.android.seasync.domain.interactor.GetAccountToken
-import com.bwksoftware.android.seasync.presentation.authentication.Authenticator
-import com.bwksoftware.android.seasync.presentation.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.authentication.Authenticator
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.view.views.AddAccountView
 import javax.inject.Inject
 

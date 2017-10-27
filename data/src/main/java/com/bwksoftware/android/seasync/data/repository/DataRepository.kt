@@ -16,7 +16,7 @@
 
 package com.bwksoftware.android.seasync.data.repository
 
-import com.bwksoftware.android.seasync.data.entity.entityDataMapper
+import com.bwksoftware.android.seasync.data.entity.EntityDataMapper
 import com.bwksoftware.android.seasync.data.net.RestApiImpl
 import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.domain.AvatarTemplate
@@ -27,7 +27,8 @@ import io.reactivex.Observable
 import javax.inject.Inject
 
 
-class DataRepository @Inject constructor(private val restService: RestApiImpl) : Repository {
+class DataRepository @Inject constructor(private val restService: RestApiImpl,
+                                         val entityDataMapper: EntityDataMapper) : Repository {
     override fun getDirectoryEntries(authToken: String, repoId: String,
                                      directory: String): Observable<List<ItemTemplate>> {
         return restService.getDirectoryEntries(authToken, repoId, directory).map(

@@ -14,10 +14,14 @@ class FileSyncService : Service() {
 
 
     override fun onCreate() {
+        Log.d("FileSyncService", "Syncservice creating")
+
         synchronized(sSyncAdapterLock) {
             if (syncAdapter == null)
                 syncAdapter = FileSyncAdapter(applicationContext)
         }
+        Log.d("FileSyncService", "Syncservice created")
+
     }
 
     override fun onBind(p0: Intent?): IBinder {

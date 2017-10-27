@@ -93,6 +93,7 @@ interface RestAPI {
 
     @GET("repos/{repo-id}/file/")
     fun getFileDownloadLink(@Header("Authorization") auth: String,
+                            @Path(value = "repo-id") repo_id: String,
                             @Query("p") directory: String): Call<String>
 
     @GET

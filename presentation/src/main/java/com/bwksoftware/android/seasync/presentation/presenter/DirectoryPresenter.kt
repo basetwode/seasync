@@ -20,7 +20,7 @@ import android.util.Log
 import com.bwksoftware.android.seasync.domain.ItemTemplate
 import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
 import com.bwksoftware.android.seasync.domain.interactor.GetDirectoryEntries
-import com.bwksoftware.android.seasync.presentation.authentication.Authenticator
+import com.bwksoftware.android.seasync.data.authentication.Authenticator
 import com.bwksoftware.android.seasync.presentation.mapper.ModelMapper
 import com.bwksoftware.android.seasync.presentation.view.views.DirectoryView
 import javax.inject.Inject

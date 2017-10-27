@@ -110,6 +110,8 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
                 presenter.currentAccount, repoId, repoName, directory, file)
     }
 
+
+
     override fun onButtonClicked(itemId: Int) {
         when (itemId) {
             R.id.repos -> {
@@ -120,6 +122,11 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
                         "com.bwksoftware.android.seasync.data.sync", params)
                 navigator.navigateToReposView(this, supportFragmentManager,
                         presenter.currentAccount)
+
+
+
+
+
             }
             R.id.uploads -> {
                 navigator.navigateToUploadsView(this, supportFragmentManager)
@@ -220,6 +227,17 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
                     .commit()
             setTitle(reposFragment!!.name())
         }
+
+//        val intent = Intent(this,FileSyncService::class.java)
+//        startService(intent)
+
+//        Intent i = new Intent(context, MyActivity.class);
+//        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        context.startActivity(i);
+//
+//        /***** For start Service  ****/
+//        Intent myIntent = new Intent(context, ServiceClassName.class);
+//        context.startService(myIntent)
     }
 
     private var doubleBackToExitPressedOnce: Boolean = false

@@ -23,7 +23,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.bwksoftware.android.seasync.presentation.R
-import com.bwksoftware.android.seasync.presentation.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.DirectoryPresenter
 import com.bwksoftware.android.seasync.presentation.view.adapter.DirectoryAdapter

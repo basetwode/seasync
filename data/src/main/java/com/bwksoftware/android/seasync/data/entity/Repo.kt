@@ -20,7 +20,7 @@ import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
 
-class Repo {
+class Repo : Syncable() {
 
     @SerializedName("id")
     @Expose
@@ -50,8 +50,6 @@ class Repo {
     @Expose
     open var size: Long? = null
 
-    open var dbId: Long? = null
 
-    open var fullSync: Boolean? = null
 
 }

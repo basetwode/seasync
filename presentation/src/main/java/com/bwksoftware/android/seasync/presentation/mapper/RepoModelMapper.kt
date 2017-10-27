@@ -41,7 +41,7 @@ class RepoModelMapper @Inject constructor() {
         if (repo.encrypted!!)
             drawable = R.drawable.repo_encrypted
         return Repo(repo.id, repo.name, repo.permission, repo.owner, repo.encrypted, repo.mtime,
-                repo.size,
+                repo.size, repo.synced, repo.storage,
                 drawable)
     }
 

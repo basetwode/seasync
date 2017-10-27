@@ -16,22 +16,19 @@
 
 package com.bwksoftware.android.seasync.data.entity
 
+import com.bwksoftware.android.seasync.data.datamanager.StorageManager
 import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.domain.AvatarTemplate
 import com.bwksoftware.android.seasync.domain.ItemTemplate
 import com.bwksoftware.android.seasync.domain.RepoTemplate
+import javax.inject.Inject
 
 
-class EntityDataMapper {
+class EntityDataMapper @Inject constructor(val storageManager: StorageManager) {
 
-    companion object {
-        fun create(): EntityDataMapper {
-            return EntityDataMapper()
-        }
-    }
 
     fun transformAccountToken(account: Account): AccountTemplate {
-        return AccountTemplate(account.token!!,account.username, account.imgUrl)
+        return AccountTemplate(account.token!!, account.username, account.imgUrl)
     }
 
     fun transformAvatar(avatar: Avatar): AvatarTemplate {
@@ -39,9 +36,9 @@ class EntityDataMapper {
     }
 
     fun transformRepo(repo: Repo): RepoTemplate {
-        val newRepo = RepoTemplate(repo.id, repo.name, repo.permission, repo.owner, repo.encrypted,
-                repo.mtime, repo.size)
-        return newRepo
+        val localRepo = storageManager.getRepo(repo)
+        return RepoTemplate(repo.id, repo.name, repo.permission, repo.owner, repo.encrypted,
+                repo.mtime, repo.size, localRepo?.synced ?: false, localRepo?.storage ?: "")
     }
 
     fun transformRepoList(repoList: List<Repo>): List<RepoTemplate> {
@@ -53,10 +50,8 @@ class EntityDataMapper {
     }
 
     fun transformItem(item: Item): ItemTemplate {
-        return ItemTemplate(item.id, item.type, item.name, item.mtime,item.size)
+        val localItem = storageManager.getFile(item.id!!)
+        return ItemTemplate(item.id, item.type, item.name, item.mtime, item.size,
+                localItem?.synced ?: false)
     }
-}
-
-val entityDataMapper by lazy {
-    EntityDataMapper.create()
 }
