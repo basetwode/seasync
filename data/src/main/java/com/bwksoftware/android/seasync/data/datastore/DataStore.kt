@@ -13,27 +13,15 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+package com.bwksoftware.android.seasync.data.datastore
 
-package com.bwksoftware.android.seasync.domain.repository
-
-import com.bwksoftware.android.seasync.domain.AccountTemplate
-import com.bwksoftware.android.seasync.domain.AvatarTemplate
 import com.bwksoftware.android.seasync.domain.ItemTemplate
 import com.bwksoftware.android.seasync.domain.RepoTemplate
 import io.reactivex.Observable
 
-/**
- * Created by ansel on 10/10/2017.
- */
-interface Repository {
+
+interface DataStore {
     fun getRepoList(authToken: String): Observable<List<RepoTemplate>>
-    fun getAvatar(username: String, authToken: String): Observable<AvatarTemplate>
-    fun getAccountToken(username: String, password: String): Observable<AccountTemplate>
     fun getDirectoryEntries(authToken: String, repoId: String,
                             directory: String): Observable<List<ItemTemplate>>
-
-    fun syncItem(authToken: String, repoId: String, directory: String, name: String,
-                 storage: String, type: String): Observable<Any>
-
-    fun unsyncItem(repoId: String, directory: String, name: String): Observable<Any>
 }

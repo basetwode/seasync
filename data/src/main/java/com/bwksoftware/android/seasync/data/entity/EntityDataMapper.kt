@@ -36,21 +36,24 @@ class EntityDataMapper @Inject constructor(val storageManager: StorageManager) {
     }
 
     fun transformRepo(repo: Repo): RepoTemplate {
-        val localRepo = storageManager.getRepo(repo)
         return RepoTemplate(repo.id, repo.name, repo.permission, repo.owner, repo.encrypted,
-                repo.mtime, repo.size, localRepo?.synced ?: false, localRepo?.storage ?: "")
+                repo.mtime, repo.size, false, "")
     }
 
     fun transformRepoList(repoList: List<Repo>): List<RepoTemplate> {
-        return repoList.mapTo(ArrayList<RepoTemplate>()) { transformRepo(it) }
+        return repoList.mapTo(ArrayList()) { transformRepo(it) }
     }
 
-    fun transformItemList(itemList: List<Item>): List<ItemTemplate> {
-        return itemList.mapTo(ArrayList<ItemTemplate>()) { transformItem(it) }
+    fun transformItemList(itemList: List<Item>, repoId: String, path: String): List<ItemTemplate> {
+        return itemList.mapTo(ArrayList()) { transformItem(it, repoId,path) }
     }
 
-    fun transformItem(item: Item): ItemTemplate {
-        val localItem = storageManager.getFile(item.id!!)
+    fun transformItem(item: Item, repoId: String, path: String): ItemTemplate {
+        val repo = storageManager.getRepo(repoId)
+        var localItem: Item? = null
+        if(repo!=null)
+            localItem = storageManager.getFile(repo.dbId!!.toString(), path+"/", item.name!!)
+        //TODO: find a way to correctly retrieve the local file (we need the repo id and the path for that)
         return ItemTemplate(item.id, item.type, item.name, item.mtime, item.size,
                 localItem?.synced ?: false)
     }

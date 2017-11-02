@@ -16,6 +16,7 @@
 
 package com.bwksoftware.android.seasync.data.repository
 
+import com.bwksoftware.android.seasync.data.datamanager.StorageManager
 import com.bwksoftware.android.seasync.data.entity.EntityDataMapper
 import com.bwksoftware.android.seasync.data.net.RestApiImpl
 import com.bwksoftware.android.seasync.domain.AccountTemplate
@@ -28,11 +29,14 @@ import javax.inject.Inject
 
 
 class DataRepository @Inject constructor(private val restService: RestApiImpl,
+                                         val storageManager: StorageManager,
                                          val entityDataMapper: EntityDataMapper) : Repository {
+
     override fun getDirectoryEntries(authToken: String, repoId: String,
                                      directory: String): Observable<List<ItemTemplate>> {
-        return restService.getDirectoryEntries(authToken, repoId, directory).map(
-                entityDataMapper::transformItemList)
+
+        return restService.getDirectoryEntries(authToken, repoId, directory).
+                map { entityDataMapper.transformItemList(it, repoId, directory) }
     }
 
     override fun getAvatar(username: String, token: String): Observable<AvatarTemplate> {
@@ -47,4 +51,18 @@ class DataRepository @Inject constructor(private val restService: RestApiImpl,
         return restService.getAccountToken(username, password).map(
                 entityDataMapper::transformAccountToken)
     }
+
+    override fun syncItem(authToken: String, repoId: String, directory: String, name: String,
+                          storage: String, type: String): Observable<Any> {
+        return Observable.fromCallable {
+            storageManager.createNewSync(authToken, repoId, directory, name, storage, type)
+        }
+    }
+
+    override fun unsyncItem(repoId: String, directory: String, name: String): Observable<Any> {
+        return Observable.fromCallable {
+            storageManager.unsyncItem(repoId, directory, name)
+        }
+    }
+
 }

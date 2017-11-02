@@ -7,6 +7,7 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
 import android.provider.BaseColumns
+import android.util.Log
 import com.bwksoftware.android.seasync.data.db.DBHelper
 
 class FileRepoContentProvider : ContentProvider() {
@@ -23,7 +24,8 @@ class FileRepoContentProvider : ContentProvider() {
                 id = db.insert(FileRepoContract.RepoColumns.TABLE_NAME, null, contentValues)
                 if (id > 0)
                     returnUri = FileRepoContract.Repo.buildRepoUri(id)
-                else throw UnsupportedOperationException("Failed to insert rows :" + contentValues) as Throwable
+                else throw UnsupportedOperationException(
+                        "Failed to insert rows :" + contentValues) as Throwable
             }
             FILE -> {
                 id = db.insert(FileRepoContract.FileColumns.TABLE_NAME, null, contentValues)
@@ -40,7 +42,7 @@ class FileRepoContentProvider : ContentProvider() {
     override fun query(uri: Uri?, projection: Array<out String>?, selection: String?,
                        selectionArgs: Array<out String>?,
                        sortOrder: String?): Cursor {
-        val db = dbHelper.writableDatabase
+        val db = dbHelper.readableDatabase
         val cursor: Cursor
         when (uriMatcher.match(uri)) {
             REPO -> {
@@ -102,13 +104,16 @@ class FileRepoContentProvider : ContentProvider() {
                         selectionArgs: Array<out String>?): Int {
         val db = dbHelper.writableDatabase
         val rows = when (uriMatcher.match(uri)) {
-            REPO_ID -> db.update(FileRepoContract.RepoColumns.TABLE_NAME, contentValues, selection,
-                    selectionArgs)
-            FILE_ID -> db.update(FileRepoContract.FileColumns.TABLE_NAME, contentValues, selection,
-                    selectionArgs)
+            REPO_ID -> db.update(FileRepoContract.RepoColumns.TABLE_NAME, contentValues,
+                    BaseColumns._ID + "=?",
+                    arrayOf(uri!!.lastPathSegment))
+            FILE_ID -> db.update(FileRepoContract.FileColumns.TABLE_NAME, contentValues,
+                    BaseColumns._ID + "=?",
+                    arrayOf(uri!!.lastPathSegment))
             else -> throw UnsupportedOperationException("Unknown Uri: " + uri)
         }
         if (selection == null || rows != 0) {
+            Log.d("FileContentProvider", "Updated ${rows} rows")
             context.contentResolver.notifyChange(uri, null)
         }
         return rows
@@ -117,10 +122,12 @@ class FileRepoContentProvider : ContentProvider() {
     override fun delete(uri: Uri?, selection: String?, selectionArgs: Array<out String>?): Int {
         val db = dbHelper.writableDatabase
         val rows = when (uriMatcher.match(uri)) {
-            REPO_ID -> db.delete(FileRepoContract.RepoColumns.TABLE_NAME, selection,
-                    selectionArgs)
-            FILE_ID -> db.delete(FileRepoContract.FileColumns.TABLE_NAME, selection,
-                    selectionArgs)
+            REPO_ID -> db.delete(FileRepoContract.RepoColumns.TABLE_NAME,
+                    BaseColumns._ID + "=?",
+                    arrayOf(uri!!.lastPathSegment))
+            FILE_ID -> db.delete(FileRepoContract.FileColumns.TABLE_NAME,
+                    BaseColumns._ID + "=?",
+                    arrayOf(uri!!.lastPathSegment))
             else -> throw UnsupportedOperationException("Unknown Uri: " + uri)
         }
         if (selection == null || rows != 0) {

@@ -9,7 +9,7 @@ import java.io.*
 
 class SyncManager {
 
-    class DownloadTask(val localItem: Item, val path: String,
+    class DownloadTask (val localItem: Item, val path: String,
                        val responseBody: ResponseBody) : AsyncTask<Void, Void, Boolean>() {
         override fun doInBackground(vararg p0: Void?): Boolean {
             //todo change path to respect repo too
@@ -23,6 +23,7 @@ class SyncManager {
                 Log.d("DownloadTask", "Downloading file: " + path)
                 // todo change the file location/name according to your needs
                 val futureStudioIconFile = File(path, filename)
+                futureStudioIconFile.parentFile.mkdirs()
                 Log.d("Files", futureStudioIconFile.absolutePath)
                 var inputStream: InputStream? = null
                 var outputStream: OutputStream? = null

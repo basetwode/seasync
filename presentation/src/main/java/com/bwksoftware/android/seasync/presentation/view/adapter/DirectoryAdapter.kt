@@ -113,16 +113,24 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
     }
 
     inner class FileHolder(itemView: View) : RecyclerView.ViewHolder(
-            itemView), View.OnClickListener {
+            itemView), View.OnClickListener, View.OnLongClickListener {
 
         init {
             itemView.setOnClickListener(this)
+            itemView.setOnLongClickListener(this)
         }
 
         override fun onClick(v: View?) {
             val item: Item = mItems[layoutPosition]
             onItemClickLister.onFileClicked(item)
         }
+
+        override fun onLongClick(v: View?): Boolean {
+            val item: Item = mItems[layoutPosition]
+            onItemClickLister.onFileLongClicked(item)
+            return true
+        }
+
         val syncedImg: ImageView = itemView.findViewById(R.id.synced_img)
         val itemImg: ImageView = itemView.findViewById(R.id.file_img)
         val itemName: TextView = itemView.findViewById(R.id.file_name)
@@ -131,15 +139,22 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
     }
 
     inner class DirectoryHolder(itemView: View) : RecyclerView.ViewHolder(
-            itemView), View.OnClickListener {
+            itemView), View.OnClickListener, View.OnLongClickListener {
 
         init {
             itemView.setOnClickListener(this)
+            itemView.setOnLongClickListener(this)
         }
 
         override fun onClick(v: View?) {
             val item: Item = mItems[layoutPosition]
             onItemClickLister.onDirectoryClicked(item)
+        }
+
+        override fun onLongClick(v: View?): Boolean {
+            val item: Item = mItems[layoutPosition]
+            onItemClickLister.onDirectoryLongClicked(item)
+            return true
         }
 
         val itemImg: ImageView = itemView.findViewById(R.id.directory_img)
@@ -150,7 +165,10 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
 
     interface OnItemClickListener {
         fun onDirectoryClicked(item: Item)
+        fun onDirectoryLongClicked(item: Item)
         fun onFileClicked(item: Item)
+        fun onFileLongClicked(item: Item)
+
     }
 
     var getDisplayImageOptions: DisplayImageOptions? =

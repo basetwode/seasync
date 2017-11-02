@@ -17,16 +17,21 @@
 package com.bwksoftware.android.seasync.presentation.presenter
 
 import android.util.Log
-import com.bwksoftware.android.seasync.domain.ItemTemplate
-import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
-import com.bwksoftware.android.seasync.domain.interactor.GetDirectoryEntries
 import com.bwksoftware.android.seasync.data.authentication.Authenticator
+import com.bwksoftware.android.seasync.domain.ItemTemplate
+import com.bwksoftware.android.seasync.domain.interactor.CreateSync
+import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
+import com.bwksoftware.android.seasync.domain.interactor.DeleteSync
+import com.bwksoftware.android.seasync.domain.interactor.GetDirectoryEntries
 import com.bwksoftware.android.seasync.presentation.mapper.ModelMapper
+import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.view.views.DirectoryView
 import javax.inject.Inject
 
 
 class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirectoryEntries,
+                                             val createSync: CreateSync,
+                                             val deleteSync: DeleteSync,
                                              val modelMapper: ModelMapper) {
 
     internal lateinit var directoryView: DirectoryView
@@ -40,6 +45,39 @@ class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirecto
                 DirectoryObserver(), GetDirectoryEntries.Params(authToken, repoId, directory))
     }
 
+    fun directoryLongClicked(accountName: String, repoId: String, item: Item, directory: String,
+                             isSynced: Boolean) {
+        if (isSynced)
+            deleteSync.execute(CreateDeleteSyncObserver(),
+                    DeleteSync.Params(repoId, directory, item.name!!))
+        else {
+            val authToken = authenticator.getCurrentUserAuthToken(accountName,
+                    directoryView.activity())
+            createSync.execute(CreateDeleteSyncObserver(),
+                    CreateSync.Params(authToken, repoId, directory, item.name!!,
+                            directoryView.activity().filesDir.absolutePath, "dir"))
+        }
+    }
+
+    fun fileLongClicked(accountName: String, repoId: String, item: Item, directory: String,
+                        isSynced: Boolean) {
+        if (isSynced)
+            deleteSync.execute(CreateDeleteSyncObserver(),
+                    DeleteSync.Params(repoId, directory, item.name!!))
+        else {
+            val authToken = authenticator.getCurrentUserAuthToken(accountName,
+                    directoryView.activity())
+            createSync.execute(CreateDeleteSyncObserver(),
+                    CreateSync.Params(authToken, repoId, directory, item.name!!,
+                            directoryView.activity().filesDir.absolutePath, "file"))
+        }
+    }
+
+    private inner class CreateDeleteSyncObserver : DefaultObserver<Any>() {
+        override fun onNext(t: Any) {
+            Log.d("DirectoryPresenter", "Sync created")
+        }
+    }
 
     private inner class DirectoryObserver : DefaultObserver<List<ItemTemplate>>() {
 

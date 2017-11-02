@@ -44,7 +44,7 @@ class DBHelper @Inject constructor(val context: Context) : SQLiteOpenHelper(cont
                         FileRepoContract.FileColumns.HASH + " TEXT, " +
                         FileRepoContract.FileColumns.REMOTE_ID + " TEXT, " +
                         FileRepoContract.FileColumns.PARENT_ID + " INTEGER, " +
-                        FileRepoContract.FileColumns.REPO_ID + " INTEGER, " +
+                        FileRepoContract.FileColumns.REPO_ID + " TEXT, " +
                         FileRepoContract.FileColumns.STORAGE + " TEXT, " +
                         FileRepoContract.FileColumns.PATH + " TEXT, " +
                         FileRepoContract.FileColumns.TYPE + " TEXT, " +
@@ -57,6 +57,6 @@ class DBHelper @Inject constructor(val context: Context) : SQLiteOpenHelper(cont
 
     companion object {
         val DATABASE_VERSION = 1
-        val DATABASE_NAME = "seasyncssssssss.db"
+        val DATABASE_NAME = "seasyncss17.db"
     }
 }

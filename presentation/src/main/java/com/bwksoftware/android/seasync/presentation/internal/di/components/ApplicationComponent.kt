@@ -18,6 +18,7 @@ package com.bwksoftware.android.seasync.presentation.internal.di.components
 import android.content.Context
 import com.bwksoftware.android.seasync.data.authentication.Authenticator
 import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.datamanager.StorageManager
 import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import com.bwksoftware.android.seasync.domain.executor.PostExecutionThread
 import com.bwksoftware.android.seasync.domain.executor.ThreadExecutor
@@ -58,5 +59,7 @@ interface ApplicationComponent {
     fun authenticator(): Authenticator
 
     fun sharedPrefsController(): SharedPrefsController
+
+    fun storageManager(): StorageManager
 
 }

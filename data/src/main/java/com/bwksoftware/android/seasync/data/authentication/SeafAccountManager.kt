@@ -11,8 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SeafAccountManager @Inject constructor(val authenticator: Authenticator,
-                                             val context: Context,
+class SeafAccountManager @Inject constructor(val context: Context,
                                              val sharedPrefsController: SharedPrefsController) {
 
     fun createAccount(email: String, password: String, serverAddress: String,

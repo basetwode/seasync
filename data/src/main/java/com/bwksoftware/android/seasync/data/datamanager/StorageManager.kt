@@ -9,9 +9,9 @@ import android.util.Log
 import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
-import com.bwksoftware.android.seasync.data.entity.Syncable
 import com.bwksoftware.android.seasync.data.net.RestApiImpl
 import com.bwksoftware.android.seasync.data.provider.FileRepoContract
+import com.bwksoftware.android.seasync.data.provider.FileRepoContract.Companion.CONTENT_URI
 import com.bwksoftware.android.seasync.data.sync.SyncManager
 import java.io.File
 import javax.inject.Inject
@@ -26,7 +26,7 @@ class StorageManager @Inject constructor(val context: Context,
             setAccount(seafAccountManager.getCurrentAccount())
     }
 
-    val contentProviderClient = context.contentResolver
+    var contentProviderClient = context.contentResolver.acquireContentProviderClient(CONTENT_URI)
 
     lateinit var currAccount: Account
 
@@ -40,6 +40,8 @@ class StorageManager @Inject constructor(val context: Context,
         item.name = cursor.getString(cursor.getColumnIndex(FileRepoContract.FileColumns.NAME))
         item.mtime = cursor.getLong(cursor.getColumnIndex(FileRepoContract.FileColumns.MOD_DATE))
         item.size = cursor.getLong(cursor.getColumnIndex(FileRepoContract.FileColumns.SIZE))
+        item.repoId = cursor.getString(
+                cursor.getColumnIndex(FileRepoContract.FileColumns.REPO_ID)).toLong()
         item.path = cursor.getString(cursor.getColumnIndex(FileRepoContract.FileColumns.PATH))
         item.type = cursor.getString(cursor.getColumnIndex(FileRepoContract.FileColumns.TYPE))
         item.id = cursor.getString(cursor.getColumnIndex(FileRepoContract.FileColumns.REMOTE_ID))
@@ -55,7 +57,7 @@ class StorageManager @Inject constructor(val context: Context,
         contentValues.put(FileRepoContract.FileColumns.SIZE, item.size)
         contentValues.put(FileRepoContract.FileColumns.MOD_DATE, item.mtime)
         contentValues.put(FileRepoContract.FileColumns.PATH, item.path)
-        contentValues.put(FileRepoContract.FileColumns.REPO_ID, item.repoId)
+        contentValues.put(FileRepoContract.FileColumns.REPO_ID, item.repoId.toString())
         contentValues.put(FileRepoContract.FileColumns.TYPE, item.type)
         contentValues.put(FileRepoContract.FileColumns.REMOTE_ID, item.id)
         contentValues.put(FileRepoContract.FileColumns.SYNCED, item.synced)
@@ -68,10 +70,6 @@ class StorageManager @Inject constructor(val context: Context,
                     item.dbId!!),
                     contentValues, null, null)
         } else {
-            if (item.type == "dir") {
-                val directory = File(item.storage, item.path)
-                directory.mkdirs()
-            }
             val resultUri = contentProviderClient.insert(FileRepoContract.File.CONTENT_URI,
                     contentValues)
             val id = resultUri.pathSegments[1]
@@ -99,7 +97,7 @@ class StorageManager @Inject constructor(val context: Context,
     fun downloadAndUpdateItem(authToken: String, repo: Repo, localItem: Item,
                               remoteItem: Item): Boolean {
         val call = restApi.getFileDownloadLink(authToken, repo.id!!,
-                remoteItem.path + "/" + remoteItem.name)
+                localItem.path + "/" + localItem.name)
         val response = call.execute()
         if (response.isSuccessful) {
             val downloadLink = response.body() ?: return false
@@ -157,31 +155,52 @@ class StorageManager @Inject constructor(val context: Context,
         return repo
     }
 
-    fun getItemsForRepo(repo: Repo, path: String): List<Item> {
+    fun getItemsForRepo(repo: Repo): Map<String, Item> {
         val cursor = contentProviderClient.query(FileRepoContract.File.CONTENT_URI,
                 null,
                 FileRepoContract.FileColumns.REPO_ID + "=?",
                 arrayOf(repo.dbId.toString()),
                 null)
-        val items = ArrayList<Item>()
+        val items = HashMap<String, Item>()
         while (cursor.moveToNext()) {
-            items.add(createItemInstance(cursor))
+            val item = createItemInstance(cursor)
+            items.put(item.name!!, item)
         }
         cursor.close()
         return items
     }
 
-    fun getRepo(repo: Repo): Repo? {
+    fun getItemsForRepo(repo: Repo, path: String): Map<String, Item> {
+        val cursor = contentProviderClient.query(FileRepoContract.File.CONTENT_URI,
+                null,
+                FileRepoContract.FileColumns.REPO_ID + "=? AND " +
+                        FileRepoContract.FileColumns.PATH + "=?",
+                arrayOf(repo.dbId.toString(), path),
+                null)
+        val items = HashMap<String, Item>()
+        while (cursor.moveToNext()) {
+            val item = createItemInstance(cursor)
+            items.put(item.name!!, item)
+        }
+        cursor.close()
+        return items
+    }
+
+    fun getRepo(repoHash: String): Repo? {
         val cursor = contentProviderClient.query(FileRepoContract.Repo.CONTENT_URI,
                 null,
                 FileRepoContract.RepoColumns.REPO_ID + "=?",
-                arrayOf(repo.id.toString()),
+                arrayOf(repoHash),
                 null)
         var localRepo: Repo? = null
         if (cursor.moveToFirst())
             localRepo = createRepoInstance(cursor)
         cursor.close()
         return localRepo
+    }
+
+    fun getRepo(repo: Repo): Repo? {
+        return getRepo(repo.id!!)
     }
 
     fun saveRepoInstance(repo: Repo) {
@@ -219,13 +238,13 @@ class StorageManager @Inject constructor(val context: Context,
         return item
     }
 
-    fun getFile(repoId: Long, path: String, name: String): Item? {
+    fun getFile(repoId: String, filePath: String, fileName: String): Item? {
         val cursor = contentProviderClient.query(FileRepoContract.File.CONTENT_URI,
                 null,
                 FileRepoContract.FileColumns.REPO_ID + "=? AND " +
                         FileRepoContract.FileColumns.PATH + "=? AND " +
                         FileRepoContract.FileColumns.NAME + "=?",
-                arrayOf(repoId.toString(), path, name),
+                arrayOf(repoId, filePath, fileName),
                 null
         )
         var item: Item? = null
@@ -233,6 +252,10 @@ class StorageManager @Inject constructor(val context: Context,
             item = createItemInstance(cursor)
         cursor.close()
         return item
+    }
+
+    fun getFile(repo: Repo, item: Item): Item? {
+        return getFile(repo.dbId.toString(), item.path!!, item.name!!)
     }
 
     fun fileExists(path: String): Boolean {
@@ -250,11 +273,98 @@ class StorageManager @Inject constructor(val context: Context,
         return result
     }
 
-    fun createLocalItem(remoteItem: Item, localParentItem: Syncable) {
-        val localItem = Item.copy(remoteItem)
-        localItem.synced = localParentItem.synced
-        localItem.path = localParentItem.path
-        localItem.storage = localParentItem.storage
+    fun deleteItemRecursive(parent: Item, repo: Repo) {
+        Log.d("StorageManager",
+                "Deleting item ${parent.path}${parent.name} ")
+        val items = getItemsForRepo(repo, parent.path!! + parent.name + "/")
+        for ((_, item) in items) {
+            if (item.type == "dir")
+                deleteItemRecursive(item, repo)
+            deleteItem(repo, item)
+        }
+        deleteItem(repo, parent)
     }
 
+    fun deleteItem(repo: Repo, item: Item) {
+        val correspondingFile = File(createFilePath(repo, item), item.name)
+        correspondingFile.delete()
+        contentProviderClient.delete(FileRepoContract.File.buildFileUri(item.dbId!!),
+                null, null)
+    }
+
+    fun unsyncItem(repoId: String, path: String, name: String) {
+        val repo = getRepo(repoId)
+        val item = getFile(repo!!.dbId.toString(), path+"/", name)
+        deleteItemRecursive(item!!, repo)
+        deleteParentsIfUnsyncedRecursive(repo, item)
+    }
+
+    fun createNewSync(authToken: String, repoHash: String, path: String, name: String,
+                      storage: String, type: String) {
+
+        var localRepo = getRepo(repoHash)
+        if (localRepo == null) {
+            restApi.getRepoListSync(authToken).execute().body()!!
+                    .filter { it.id == repoHash }
+                    .forEach { localRepo = it }
+
+        }
+        localRepo!!.mtime = 0
+        saveRepoInstance(localRepo!!)
+
+        if(path.isNotEmpty())
+            createNewSyncRecursive(authToken, localRepo!!, path, storage)
+        val itemToSync = Item()
+        itemToSync.name = name
+        itemToSync.path = path + "/"
+        itemToSync.type = type
+        itemToSync.repoId = localRepo!!.dbId
+        itemToSync.synced = true
+        itemToSync.storage = storage
+        saveItemInstance(itemToSync)
+        localRepo!!.mtime = 0
+        saveRepoInstance(localRepo!!)
+    }
+
+    fun deleteParentsIfUnsyncedRecursive(repo: Repo, item: Item) {
+        val pathWithoutTrailingSlash = item.path!!.substringBeforeLast("/")
+        val pathParent = pathWithoutTrailingSlash.substringBeforeLast("/")
+        val nameParent = pathWithoutTrailingSlash.substringAfterLast("/")
+        val parent = getFile(repo.dbId.toString(), pathParent + "/", nameParent)
+        deleteItem(repo, item)
+
+        val childs = getItemsForRepo(repo, pathParent)
+        if (childs.isNotEmpty())
+            return
+        if (pathParent.isNotEmpty())
+            deleteParentsIfUnsyncedRecursive(repo, parent!!)
+
+    }
+
+    fun createNewSyncRecursive(authToken: String, repo: Repo, path: String,
+                               storage: String): Item {
+
+
+        val parentPath = path.substringBeforeLast("/")
+        val name = path.substringAfterLast("/")
+
+        if (parentPath.isNotEmpty()) {
+            createNewSyncRecursive(authToken, repo, parentPath, storage)
+        }
+        val directory = Item()
+        directory.repoId = repo.dbId
+        directory.name = name
+        directory.path = parentPath + "/"
+        directory.type = "dir"
+        directory.storage = storage
+        var localDirectory = getFile(repo, directory)
+        if (localDirectory == null) {
+            localDirectory = directory
+
+        }
+        directory.mtime = 0
+        saveItemInstance(directory)
+        return localDirectory
+
+    }
 }

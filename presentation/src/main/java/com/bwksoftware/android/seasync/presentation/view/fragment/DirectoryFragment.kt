@@ -22,8 +22,8 @@ import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.DirectoryPresenter
 import com.bwksoftware.android.seasync.presentation.view.adapter.DirectoryAdapter
@@ -128,6 +128,19 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                     arguments.getString(PARAM_DIRECTORY), item.name!!)
         }
     }
+
+    override fun onDirectoryLongClicked(item: Item) {
+        directoryPresenter.directoryLongClicked(arguments.getString(PARAM_ACCOUNT),arguments.getString(
+                PARAM_REPOID), item,
+                arguments.getString(PARAM_DIRECTORY),item.synced)
+    }
+
+    override fun onFileLongClicked(item: Item) {
+        directoryPresenter.fileLongClicked(arguments.getString(PARAM_ACCOUNT),arguments.getString(
+                PARAM_REPOID), item,
+                arguments.getString(PARAM_DIRECTORY),item.synced)
+    }
+
 
     private fun loadDirectory() {
         directoryPresenter.getDirectoryEntries(arguments.getString(PARAM_ACCOUNT),
