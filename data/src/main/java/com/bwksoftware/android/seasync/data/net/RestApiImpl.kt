@@ -83,18 +83,18 @@ class RestApiImpl @Inject constructor(val context: Context) {
 
     fun getDirectoryEntriesSync(authToken: String, repoID: String,
                                 directory: String): Call<List<Item>> {
-        Log.d("FileSyncService",repoID)
+        Log.d("FileSyncService", repoID)
         if (directory.isEmpty())
             return service.getDirectoryEntriesSync(repoID, "Token " + authToken)
         return service.getDirectoryEntriesSync(repoID, "Token " + authToken, directory)
     }
 
     fun getUpdateLink(authToken: String, repoID: String, directory: String): Call<String> {
-        return service.getUpdateLink(repoID,"Token " + authToken, directory)
+        return service.getUpdateLink(repoID, "Token " + authToken, directory)
     }
 
     fun getUploadLink(authToken: String, repoID: String, directory: String): Call<String> {
-        return service.getUploadLink(repoID,"Token " + authToken, directory)
+        return service.getUploadLink(repoID, "Token " + authToken, directory)
     }
 
     fun uploadFile(url: String, authToken: String, parentDir: String, relativeDir: String,
@@ -105,7 +105,7 @@ class RestApiImpl @Inject constructor(val context: Context) {
         )
         // MultipartBody.Part is used to send also the actual file name
         val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-        return service.uploadFile(url,"Token " + authToken, parentDir, relativeDir, body)
+        return service.uploadFile(url, "Token " + authToken, parentDir, relativeDir, body)
     }
 
     fun updateFile(url: String, authToken: String,
@@ -116,14 +116,18 @@ class RestApiImpl @Inject constructor(val context: Context) {
         )
         // MultipartBody.Part is used to send also the actual file name
         val body = MultipartBody.Part.createFormData("target_file", targetFile.name, requestFile)
-        return service.updateFile(url, "Token " +authToken, body)
+        return service.updateFile(url, "Token " + authToken, body)
     }
 
-    fun getFileDownloadLink(authToken: String,repoID: String, directory: String): Call<String> {
-        return service.getFileDownloadLink("Token " +authToken, repoID,directory)
+    fun getFileDownloadLink(authToken: String, repoID: String, directory: String): Call<String> {
+        return service.getFileDownloadLink("Token " + authToken, repoID, directory)
     }
 
     fun downloadFile(url: String): Call<ResponseBody> {
         return service.downloadFile(url)
+    }
+
+    fun getFileDetail(authToken: String, repoID: String, directory: String, filename: String): Call<Item> {
+        return service.getFileDetail(repoID, directory + filename, "Token " + authToken)
     }
 }

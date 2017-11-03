@@ -108,11 +108,13 @@ class StorageManager @Inject constructor(val context: Context,
                 val download = SyncManager.DownloadTask(localItem, createFilePath(repo, localItem),
                         file)
                 val fileDownloadedSuccessful = download.execute().get()
-//                if (fileDownloadedSuccessful) {
-//                    localItem.mtime = remoteItem.mtime
-//                    localItem.size = remoteItem.size
-//                    saveItemInstance(localItem)
-//                }
+                val detailCall = restApi.getFileDetail(authToken, repo.id!!, localItem.path!!, localItem.name!!)
+                val itemDetails = detailCall.execute().body() ?: return false
+
+                if (fileDownloadedSuccessful) {
+                    remoteItem.mtime = itemDetails.mtime
+                    remoteItem.size = itemDetails.size
+                }
                 return fileDownloadedSuccessful
             }
             return false
@@ -294,7 +296,7 @@ class StorageManager @Inject constructor(val context: Context,
 
     fun unsyncItem(repoId: String, path: String, name: String) {
         val repo = getRepo(repoId)
-        val item = getFile(repo!!.dbId.toString(), path+"/", name)
+        val item = getFile(repo!!.dbId.toString(), path + "/", name)
         deleteItemRecursive(item!!, repo)
         deleteParentsIfUnsyncedRecursive(repo, item)
     }
@@ -312,7 +314,7 @@ class StorageManager @Inject constructor(val context: Context,
         localRepo!!.mtime = 0
         saveRepoInstance(localRepo!!)
 
-        if(path.isNotEmpty())
+        if (path.isNotEmpty())
             createNewSyncRecursive(authToken, localRepo!!, path, storage)
         val itemToSync = Item()
         itemToSync.name = name

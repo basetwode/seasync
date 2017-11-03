@@ -47,6 +47,11 @@ interface RestAPI {
     fun getDirectoryEntriesSync(@Path(value = "repo-id") repo_id: String,
                                 @Header("Authorization") auth: String): Call<List<Item>>
 
+    @GET("repos/{repo-id}/file/detail/")
+    fun getFileDetail(@Path(value = "repo-id") repo_id: String,
+                      @Query("p") file: String,
+                      @Header("Authorization") auth: String): Call<Item>
+
     @GET("repos/{repo-id}/dir/")
     fun getDirectoryEntries(@Path(value = "repo-id") repo_id: String,
                             @Header("Authorization") auth: String,
