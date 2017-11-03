@@ -29,7 +29,7 @@ import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.ImageViewerPresenter
-import com.bwksoftware.android.seasync.presentation.utils.FileUtils
+import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.view.activity.AccountActivity
 import com.bwksoftware.android.seasync.presentation.view.adapter.ImageViewerAdapter
 import com.bwksoftware.android.seasync.presentation.view.views.ImageViewerView

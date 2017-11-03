@@ -16,12 +16,13 @@
 
 package com.bwksoftware.android.seasync.presentation
 
+import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
-import com.bwksoftware.android.seasync.presentation.internal.di.components.DaggerApplicationComponent
 import com.bwksoftware.android.seasync.presentation.components.AuthImageDownloader
 import com.bwksoftware.android.seasync.presentation.components.NutraBaseImageDecoder
 import com.bwksoftware.android.seasync.presentation.internal.di.components.ApplicationComponent
+import com.bwksoftware.android.seasync.presentation.internal.di.components.DaggerApplicationComponent
 import com.bwksoftware.android.seasync.presentation.internal.di.modules.ApplicationModule
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator
 import com.nostra13.universalimageloader.core.ImageLoader
@@ -36,6 +37,11 @@ class App : Application() {
                 .builder()
                 .applicationModule(ApplicationModule(this))
                 .build()
+    }
+
+    fun startFileObserverIfNotRunning(){
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        //for(service in manager.ru)
     }
 
     override fun onCreate() {

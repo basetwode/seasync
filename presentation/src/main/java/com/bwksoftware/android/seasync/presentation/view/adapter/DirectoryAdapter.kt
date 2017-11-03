@@ -32,7 +32,7 @@ import com.bwksoftware.android.seasync.presentation.model.FileItem
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_DIRECTORY
 import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_FILE
-import com.bwksoftware.android.seasync.presentation.utils.FileUtils
+import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
 import java.net.URLEncoder

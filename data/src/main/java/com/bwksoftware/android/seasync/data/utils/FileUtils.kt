@@ -1,8 +1,8 @@
-package com.bwksoftware.android.seasync.presentation.utils
+package com.bwksoftware.android.seasync.data.utils
 
 import android.content.Context
 import android.webkit.MimeTypeMap
-import com.bwksoftware.android.seasync.presentation.R
+import com.bwksoftware.android.seasync.data.R
 import java.net.URLEncoder
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -26,11 +26,7 @@ class FileUtils {
                     "%20").toLowerCase()
             val extension = MimeTypeMap.getFileExtensionFromUrl(encodedFileName)
             val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
-            if (mime != null)
-                return mime
-            else
-                return null
-            //TODO: replace with default mime type
+            return mime?:return "text/plain"
         }
 
         fun getThumbnailUrl(address: String, repoId: String, fileName: String, size: Int): String {

@@ -50,6 +50,8 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
         // retrieve list of repos and compare their modified time to local repos from db
         val repos = restApi.getRepoListSync(authToken).execute().body()
         printFilesRecursive(mContext.filesDir)
+        if (repos == null)
+            return
         for (remoteRepo in repos!!) {
 
             var localRepo = storageManager.getRepo(remoteRepo)
@@ -80,7 +82,7 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
             val syncSuccess = syncDirectoryRecursive(contentProviderClient, authToken, localRepo,
                     localRepo, "/")
             if (syncSuccess) updateCreateItemIfSyncSuccessful(syncSuccess, localRepo,
-                    remoteRepo.mtime!!, remoteRepo.size!!,"")
+                    remoteRepo.mtime!!, remoteRepo.size!!, "")
         }
     }
 
@@ -187,7 +189,6 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
             }
         }
     }
-
 
 
     fun updateCreateItemIfSyncSuccessful(syncSuccess: Boolean, item: Syncable, newMtime: Long,

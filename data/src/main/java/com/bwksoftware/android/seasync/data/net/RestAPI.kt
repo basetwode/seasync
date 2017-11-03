@@ -93,7 +93,8 @@ interface RestAPI {
     @POST
     fun updateFile(@Url url: String,
                    @Header("Authorization") auth: String,
-                   @Part targetFile: MultipartBody.Part
+                   @Part targetFile: MultipartBody.Part,
+                   @Part file: MultipartBody.Part
     ): Call<String>
 
     @GET("repos/{repo-id}/file/")

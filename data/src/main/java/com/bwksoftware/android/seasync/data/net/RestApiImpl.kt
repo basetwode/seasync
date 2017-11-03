@@ -23,7 +23,8 @@ import com.bwksoftware.android.seasync.data.entity.Account
 import com.bwksoftware.android.seasync.data.entity.Avatar
 import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
-import com.google.gson.Gson
+import com.bwksoftware.android.seasync.data.utils.FileUtils
+import com.google.gson.GsonBuilder
 import io.reactivex.Observable
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
@@ -48,9 +49,10 @@ class RestApiImpl @Inject constructor(val context: Context) {
 // set your desired log level
         logging.setLevel(HttpLoggingInterceptor.Level.BODY)
         val builder = OkHttpClient.Builder()
-                .addInterceptor(logging)
+//                .addInterceptor(logging)
         val retro = Retrofit.Builder().baseUrl(RestAPI.API_BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(Gson()))
+                .addConverterFactory(
+                        GsonConverterFactory.create(GsonBuilder().setLenient().create()))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(builder.build()).build()
         service = retro.create(RestAPI::class.java)
@@ -108,15 +110,25 @@ class RestApiImpl @Inject constructor(val context: Context) {
         return service.uploadFile(url, "Token " + authToken, parentDir, relativeDir, body)
     }
 
-    fun updateFile(url: String, authToken: String,
+    fun updateFile(url: String, authToken: String, targetFilePath: String,
                    targetFile: File): Call<String> {
+        //TODO: fall back if mimetype unknown
         val requestFile = RequestBody.create(
-                MediaType.parse(context.contentResolver.getType(Uri.fromFile(targetFile))),
+                MediaType.parse(FileUtils.getMimeType(
+                        targetFile.name).toString()),
                 targetFile
         )
         // MultipartBody.Part is used to send also the actual file name
-        val body = MultipartBody.Part.createFormData("target_file", targetFile.name, requestFile)
-        return service.updateFile(url, "Token " + authToken, body)
+        val body = MultipartBody.Builder()
+
+        body.addFormDataPart("target_file", targetFilePath)
+        body.addFormDataPart("file", targetFile.name, requestFile)
+
+        val bodyParts = body.build()
+//  val body = MultipartBody.Part.createFormData("target_file", targetFile.name, requestFile)
+        return service.updateFile(url,
+                "Token " + authToken,
+                bodyParts.part(0), bodyParts.part(1))
     }
 
     fun getFileDownloadLink(authToken: String, repoID: String, directory: String): Call<String> {
@@ -127,7 +139,8 @@ class RestApiImpl @Inject constructor(val context: Context) {
         return service.downloadFile(url)
     }
 
-    fun getFileDetail(authToken: String, repoID: String, directory: String, filename: String): Call<Item> {
+    fun getFileDetail(authToken: String, repoID: String, directory: String,
+                      filename: String): Call<Item> {
         return service.getFileDetail(repoID, directory + filename, "Token " + authToken)
     }
 }

@@ -107,19 +107,33 @@ class StorageManager @Inject constructor(val context: Context,
                 val file = responseDownload.body() ?: return false
                 val download = SyncManager.DownloadTask(localItem, createFilePath(repo, localItem),
                         file)
+                Thread.sleep(100)
                 val fileDownloadedSuccessful = download.execute().get()
-                val detailCall = restApi.getFileDetail(authToken, repo.id!!, localItem.path!!, localItem.name!!)
-                val itemDetails = detailCall.execute().body() ?: return false
 
-                if (fileDownloadedSuccessful) {
-                    remoteItem.mtime = itemDetails.mtime
-                    remoteItem.size = itemDetails.size
-                }
                 return fileDownloadedSuccessful
             }
             return false
         }
         return false
+    }
+
+    fun getPathAndNameFromPath(path: String): List<String> {
+        val pathWithoutTrailingSlash = if (path.endsWith("/")) path.removeSuffix("/") else path
+        val newPath = pathWithoutTrailingSlash.substringBeforeLast("/")
+        val name = pathWithoutTrailingSlash.substringAfterLast("/")
+        return listOf(newPath, name)
+    }
+
+    fun updateItemFromBottomToTop(repo: Repo, item: Item) {
+        Log.d("StorageManager", "Updating ${repo.name}: ${item.path} - ${item.name}")
+        val (parentPath, parentName) = getPathAndNameFromPath(item.path!!)
+        val parentItem = getFile(repo.dbId!!.toString(), parentPath + "/", parentName)
+        if (parentPath.isNotEmpty())
+            updateItemFromBottomToTop(repo, parentItem!!)
+        if (parentItem != null) {
+            parentItem!!.mtime = item.mtime
+            saveItemInstance(parentItem)
+        }
     }
 
     fun createFilePath(repo: Repo, item: Item): String {
@@ -134,13 +148,23 @@ class StorageManager @Inject constructor(val context: Context,
         if (response.isSuccessful) {
             val link = response.body() ?: return false
             //TODO refactor file path creation
-            val directory = File(localItem.storage, localItem.name)
+
+            val file = File(createFilePath(repo, localItem), localItem.name)
             val uploadCall = restApi.updateFile(link, authToken,
-                    File(directory, localItem.name))
+                    File(localItem.path, localItem.name).absolutePath,
+                    file)
             val responseUpload = uploadCall.execute()
+
+            val detailCall = restApi.getFileDetail(authToken, repo.id!!, localItem.path!!,
+                    localItem.name!!)
+            val itemDetails = detailCall.execute().body() ?: return false
+
+            if (responseUpload.isSuccessful) {
+                remoteItem.mtime = itemDetails.mtime
+                remoteItem.size = itemDetails.size
+            }
+
             return responseUpload.isSuccessful
-            //TODO: do we have to retrieve mtime from server?
-            //else we're fine
         }
         return false
     }
@@ -186,6 +210,19 @@ class StorageManager @Inject constructor(val context: Context,
         }
         cursor.close()
         return items
+    }
+
+    fun getRepo(key: String, value: String): Repo? {
+        val cursor = contentProviderClient.query(FileRepoContract.Repo.CONTENT_URI,
+                null,
+                "$key=?",
+                arrayOf(value),
+                null)
+        var localRepo: Repo? = null
+        if (cursor.moveToFirst())
+            localRepo = createRepoInstance(cursor)
+        cursor.close()
+        return localRepo
     }
 
     fun getRepo(repoHash: String): Repo? {

@@ -28,7 +28,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.model.Repo
-import com.bwksoftware.android.seasync.presentation.utils.FileUtils
+import com.bwksoftware.android.seasync.data.utils.FileUtils
 
 
 class RepoAdapter(val onItemClickLister: OnItemClickListener,

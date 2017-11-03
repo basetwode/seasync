@@ -19,7 +19,6 @@ package com.bwksoftware.android.seasync.presentation.view.activity
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.CoordinatorLayout
@@ -39,6 +38,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import com.bwksoftware.android.seasync.data.provider.FileRepoContract
+import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.App
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.internal.di.components.ActivityComponent
@@ -48,7 +48,6 @@ import com.bwksoftware.android.seasync.presentation.model.Account
 import com.bwksoftware.android.seasync.presentation.model.NavBaseItem
 import com.bwksoftware.android.seasync.presentation.navigation.Navigator
 import com.bwksoftware.android.seasync.presentation.presenter.AccountPresenter
-import com.bwksoftware.android.seasync.presentation.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.view.adapter.AccountAdapter
 import com.bwksoftware.android.seasync.presentation.view.fragment.AddAccountFragment
 import com.bwksoftware.android.seasync.presentation.view.fragment.BaseFragment
@@ -116,13 +115,13 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
         if(storage.isEmpty())
             return
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
         val file = File(File(File(storage, presenter.currentAccount.name + "/" + repoName), directory), filename)
         val uri = FileProvider.getUriForFile(this, "com.bwksoftware.android.seasync.data.fileprovider", file)
         intent.setDataAndType(uri, FileUtils.getMimeType(filename))
-        Log.d("AccountActivity",FileUtils.getMimeType(filename))
+        Log.d("AccountActivity", FileUtils.getMimeType(filename))
         startActivity(Intent.createChooser(intent, "Select app to open"))
     }
 
