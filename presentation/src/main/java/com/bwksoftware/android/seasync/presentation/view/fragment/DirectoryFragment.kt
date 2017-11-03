@@ -26,6 +26,7 @@ import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.DirectoryPresenter
+import com.bwksoftware.android.seasync.presentation.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.view.adapter.DirectoryAdapter
 import com.bwksoftware.android.seasync.presentation.view.views.DirectoryView
 import javax.inject.Inject
@@ -39,7 +40,11 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                                directory: String)
 
         fun onFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
-                          directory: String, file: String)
+                          directory: String,storage:String, file: String)
+
+        fun onImageClicked(fragment: BaseFragment, repoId: String, repoName: String,
+                           directory: String, file: String)
+
     }
 
     companion object {
@@ -122,23 +127,32 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
     override fun onFileClicked(item: Item) {
         val attachedActivity = activity
         when (attachedActivity) {
-            is OnDirectoryClickedListener -> attachedActivity.onFileClicked(this,
-                    arguments.getString(PARAM_REPOID),
-                    arguments.getString(PARAM_REPONAME),
-                    arguments.getString(PARAM_DIRECTORY), item.name!!)
+            is OnDirectoryClickedListener -> {
+                if(FileUtils.isViewableImage(item.name!!))
+                    attachedActivity.onImageClicked(this,
+                            arguments.getString(PARAM_REPOID),
+                            arguments.getString(PARAM_REPONAME),
+                            arguments.getString(PARAM_DIRECTORY), item.name)
+                else
+                    attachedActivity.onFileClicked(this,
+                            arguments.getString(PARAM_REPOID),
+                            arguments.getString(PARAM_REPONAME),
+                            arguments.getString(PARAM_DIRECTORY),item.storage!!, item.name)
+
+            }
         }
     }
 
     override fun onDirectoryLongClicked(item: Item) {
-        directoryPresenter.directoryLongClicked(arguments.getString(PARAM_ACCOUNT),arguments.getString(
+        directoryPresenter.directoryLongClicked(arguments.getString(PARAM_ACCOUNT), arguments.getString(
                 PARAM_REPOID), item,
-                arguments.getString(PARAM_DIRECTORY),item.synced)
+                arguments.getString(PARAM_DIRECTORY), item.synced)
     }
 
     override fun onFileLongClicked(item: Item) {
-        directoryPresenter.fileLongClicked(arguments.getString(PARAM_ACCOUNT),arguments.getString(
+        directoryPresenter.fileLongClicked(arguments.getString(PARAM_ACCOUNT), arguments.getString(
                 PARAM_REPOID), item,
-                arguments.getString(PARAM_DIRECTORY),item.synced)
+                arguments.getString(PARAM_DIRECTORY), item.synced)
     }
 
 

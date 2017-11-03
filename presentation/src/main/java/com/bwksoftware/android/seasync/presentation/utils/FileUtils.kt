@@ -21,6 +21,18 @@ class FileUtils {
             else return false
         }
 
+        fun getMimeType(fileName: String): String? {
+            val encodedFileName = URLEncoder.encode(fileName, "UTF-8").replace("+",
+                    "%20").toLowerCase()
+            val extension = MimeTypeMap.getFileExtensionFromUrl(encodedFileName)
+            val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+            if (mime != null)
+                return mime
+            else
+                return null
+            //TODO: replace with default mime type
+        }
+
         fun getThumbnailUrl(address: String, repoId: String, fileName: String, size: Int): String {
             return "https://$address/api2/repos/$repoId/thumbnail/?p=$fileName&size=$size"
         }

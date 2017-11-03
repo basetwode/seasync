@@ -18,10 +18,13 @@ package com.bwksoftware.android.seasync.presentation.view.activity
 
 import android.app.Activity
 import android.content.ContentResolver
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.FragmentManager
+import android.support.v4.content.FileProvider
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
@@ -29,6 +32,7 @@ import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.Gravity
 import android.view.Menu
 import android.view.View
@@ -44,12 +48,14 @@ import com.bwksoftware.android.seasync.presentation.model.Account
 import com.bwksoftware.android.seasync.presentation.model.NavBaseItem
 import com.bwksoftware.android.seasync.presentation.navigation.Navigator
 import com.bwksoftware.android.seasync.presentation.presenter.AccountPresenter
+import com.bwksoftware.android.seasync.presentation.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.view.adapter.AccountAdapter
 import com.bwksoftware.android.seasync.presentation.view.fragment.AddAccountFragment
 import com.bwksoftware.android.seasync.presentation.view.fragment.BaseFragment
 import com.bwksoftware.android.seasync.presentation.view.fragment.DirectoryFragment
 import com.bwksoftware.android.seasync.presentation.view.fragment.ReposFragment
 import com.bwksoftware.android.seasync.presentation.view.views.AccountView
+import java.io.File
 import javax.inject.Inject
 import android.accounts.Account as AndroidAccount
 
@@ -103,13 +109,29 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
                 repoId, repoName, directory)
     }
 
+
     override fun onFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
-                               directory: String,
-                               file: String) {
+                               directory: String, storage: String,
+                               filename: String) {
+        if(storage.isEmpty())
+            return
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
+        val file = File(File(File(storage, presenter.currentAccount.name + "/" + repoName), directory), filename)
+        val uri = FileProvider.getUriForFile(this, "com.bwksoftware.android.seasync.data.fileprovider", file)
+        intent.setDataAndType(uri, FileUtils.getMimeType(filename))
+        Log.d("AccountActivity",FileUtils.getMimeType(filename))
+        startActivity(Intent.createChooser(intent, "Select app to open"))
+    }
+
+    override fun onImageClicked(fragment: BaseFragment, repoId: String, repoName: String,
+                                directory: String,
+                                file: String) {
         navigator.navigateToImageViewer(this, fragment.childFragmentManager,
                 presenter.currentAccount, repoId, repoName, directory, file)
     }
-
 
 
     override fun onButtonClicked(itemId: Int) {
@@ -122,9 +144,6 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
                         "com.bwksoftware.android.seasync.data.sync", params)
                 navigator.navigateToReposView(this, supportFragmentManager,
                         presenter.currentAccount)
-
-
-
 
 
             }
@@ -155,7 +174,7 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
 
     override fun selectAccount(account: Account) {
 
-        contentResolver.notifyChange(FileRepoContract.CONTENT_URI,null)
+        contentResolver.notifyChange(FileRepoContract.CONTENT_URI, null)
         initNavigationDrawer()
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         initScreen()

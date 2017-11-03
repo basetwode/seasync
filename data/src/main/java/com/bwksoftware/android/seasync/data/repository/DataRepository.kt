@@ -39,6 +39,13 @@ class DataRepository @Inject constructor(private val restService: RestApiImpl,
                 map { entityDataMapper.transformItemList(it, repoId, directory) }
     }
 
+//    override fun getFileDetail(authToken: String, repoId: String, directory: String,
+//                               filename: String) {
+//        return restService.getFileDetail(authToken,repoId, directory,filename).
+//                map { entityDataMapper.transformItem(it,repoId,directory)}
+//    }
+
+
     override fun getAvatar(username: String, token: String): Observable<AvatarTemplate> {
         return restService.getAvatar(username, token).map(entityDataMapper::transformAvatar)
     }

@@ -16,9 +16,9 @@ class ModelMapper @Inject constructor() {
 
     fun transformItem(item: ItemTemplate): Item {
         return when (item.type) {
-            "file" -> FileItem(item.id, item.name, item.mtime, item.size,item.synced)
-            "dir" -> DirectoryItem(item.id, item.name, item.mtime, item.size, item.synced)
-            else -> Item(item.id, item.name, item.mtime, item.size, Item.UNKNOWN, item.synced)
+            "file" -> FileItem(item.id, item.name, item.mtime, item.size,item.storage,item.synced)
+            "dir" -> DirectoryItem(item.id, item.name, item.mtime, item.size, item.storage, item.synced)
+            else -> Item(item.id, item.name, item.mtime, item.size, Item.UNKNOWN, item.storage, item.synced)
         }
     }
 

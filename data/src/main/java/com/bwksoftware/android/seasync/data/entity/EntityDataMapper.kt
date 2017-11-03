@@ -55,6 +55,6 @@ class EntityDataMapper @Inject constructor(val storageManager: StorageManager) {
             localItem = storageManager.getFile(repo.dbId!!.toString(), path+"/", item.name!!)
         //TODO: find a way to correctly retrieve the local file (we need the repo id and the path for that)
         return ItemTemplate(item.id, item.type, item.name, item.mtime, item.size,
-                localItem?.synced ?: false)
+                localItem?.storage?:"", localItem?.synced ?: false)
     }
 }
