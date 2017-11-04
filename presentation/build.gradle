@@ -11,7 +11,7 @@ android {
     buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "com.bwksoftware.android.seasync.presentation"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
         versionName "0.1"
@@ -34,6 +34,7 @@ dependencies {
     implementation 'com.android.support:design:26.1.0'
     implementation 'com.android.support:cardview-v7:26.1.0'
     implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'it.sephiroth.android.library.imagezoom:imagezoom:2.3.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1', {
         exclude group: 'com.android.support', module: 'support-annotations'

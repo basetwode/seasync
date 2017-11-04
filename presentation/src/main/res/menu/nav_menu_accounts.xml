@@ -21,6 +21,6 @@
         android:title="Add account" />
     <item
         android:id="@+id/manage_account"
-        android:icon="@drawable/list_view"
+        android:icon="@drawable/settings"
         android:title="Manage accounts" />
 </menu>

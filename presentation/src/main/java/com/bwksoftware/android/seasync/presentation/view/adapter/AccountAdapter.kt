@@ -45,6 +45,12 @@ class AccountAdapter(val onItemClickLister: OnItemClickListener,
         mItems.addAll(newItems)
     }
 
+    fun getLogoLink(serverAddress: String): List<String> {
+        val defaultAddress = "https://$serverAddress/media/img/seafile_logo.png"
+        val customAddress = "https://$serverAddress/media/custom/mylogo.png"
+        return listOf(defaultAddress, customAddress)
+    }
+
     override fun getItemViewType(position: Int): Int {
         return if (position == 0) return TYPE_HEADER else mItems[position].itemType
     }
@@ -82,11 +88,21 @@ class AccountAdapter(val onItemClickLister: OnItemClickListener,
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
         val item = mItems[position]
         if (holder is HeaderHolder && item is Account) {
-            Picasso.Builder(context).downloader(downloader).build().load(item.imgLink).into(
+            val (defaultLink, customLink) = getLogoLink(item.server)
+            val builder = Picasso.Builder(context)
+            builder.listener { _, _, _ ->
+                Picasso.Builder(context).downloader(downloader).build().load(customLink).noFade().into(
+                        holder.headerImg)
+            }
+            builder.downloader(downloader).build().load(defaultLink).noFade().into(
+                    holder.headerImg)
+
+            Picasso.Builder(context).downloader(downloader).build().load(item.imgLink).noFade().into(
                     holder.accountImg)
             holder.accountName.text = item.name
         } else if (holder is AccountHolder && item is Account) {
-            Picasso.Builder(context).downloader(downloader).build().load(item.imgLink).into(
+            Picasso.Builder(context).downloader(downloader).build().load(
+                    item.imgLink).noFade().into(
                     holder.accountImg)
             holder.accountName.text = item.name
         } else if (holder is ButtonHolder && item is NavButton) {
@@ -118,6 +134,7 @@ class AccountAdapter(val onItemClickLister: OnItemClickListener,
         val accountImg: ImageView = itemView.findViewById(R.id.account_item_img)
         val accountName: TextView = itemView.findViewById(R.id.account_item_name)
         val selectButton: TextView = itemView.findViewById(R.id.header_button)
+        val headerImg: ImageView = itemView.findViewById(R.id.navigation_background_img)
 
         init {
             selectButton.setOnClickListener({ onItemClickLister.onHeaderButtonClicked() })

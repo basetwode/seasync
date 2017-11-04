@@ -4,11 +4,15 @@ import android.accounts.Account
 import android.accounts.AccountManager
 import android.content.ContentResolver
 import android.content.Context
+import android.content.SyncRequest
+import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import com.bwksoftware.android.seasync.data.R
 import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import javax.inject.Inject
 import javax.inject.Singleton
+
 
 @Singleton
 class SeafAccountManager @Inject constructor(val context: Context,
@@ -17,22 +21,41 @@ class SeafAccountManager @Inject constructor(val context: Context,
     fun createAccount(email: String, password: String, serverAddress: String,
                       authToken: String): Account {
         val account = Account(email, context.getString(R.string.authtype))
-        Log.d("SeafAccMgr",account.toString())
+        Log.d("SeafAccMgr", account.toString())
         val am = AccountManager.get(context)
-        ContentResolver.setIsSyncable(account,context.getString(R.string.authtype),1)
-        ContentResolver.setSyncAutomatically(account,context.getString(R.string.authtype), true);
+
         am.addAccountExplicitly(account, password, null)
         am.setAuthToken(account, "full_access", authToken)
         am.setUserData(account, "Server", serverAddress)
+
+        ContentResolver.setMasterSyncAutomatically(true)
+        ContentResolver.setIsSyncable(account, context.getString(R.string.authtype), 1)
+        ContentResolver.setSyncAutomatically(account, context.getString(R.string.authtype), true);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            val b  = SyncRequest.Builder().syncPeriodic(60, 1)
+            b.setSyncAdapter(account, context.getString(R.string.authtype))
+            b.setExtras(Bundle())
+            ContentResolver.requestSync(b.build())
+        } else {
+            ContentResolver.addPeriodicSync(account, context.getString(R.string.authtype), Bundle.EMPTY,
+                    120 )
+        }
+
+        Log.d("SeafAccountMgr",ContentResolver.getIsSyncable(account,
+                context.getString(R.string.authtype)).toString())
+        Log.d("SeafAccountMgr",ContentResolver.getPeriodicSyncs(account,
+                context.getString(R.string.authtype)).toString())
         return account
     }
 
     fun getAllAccounts(): List<Account> {
         val accountManager = AccountManager.get(context)
-        val currentAccountName = sharedPrefsController.getPreference(
+        val currentAccountName = sharedPrefsController.getPreferenceValue(
                 SharedPrefsController.Preference.CURRENT_USER_ACCOUNT)
         var accounts = accountManager.getAccountsByType(context.getString(R.string.authtype))
-        if (accounts.isEmpty() || currentAccountName=="None")
+        if (accounts.isEmpty() || currentAccountName == "None")
             accounts += Account("None", context.getString(R.string.authtype))
         return accounts.sortedWith(Comparator { o1, _ ->
             if (o1.name == currentAccountName) -1 else 0
@@ -53,16 +76,16 @@ class SeafAccountManager @Inject constructor(val context: Context,
     }
 
     fun getCurrentAccount(): Account {
-        var account = getAccountByName(sharedPrefsController.getPreference(
+        var account = getAccountByName(sharedPrefsController.getPreferenceValue(
                 SharedPrefsController.Preference.CURRENT_USER_ACCOUNT))
         if (account == null) {
-            account = Account("None",  context.getString(R.string.authtype))
+            account = Account("None", context.getString(R.string.authtype))
         }
         return account
     }
 
     fun getCurrentAccountToken(): String {
-        val currentAccountName = sharedPrefsController.getPreference(
+        val currentAccountName = sharedPrefsController.getPreferenceValue(
                 SharedPrefsController.Preference.CURRENT_USER_ACCOUNT)
         val currentAccount = getAccountByName(currentAccountName)
         if (currentAccount != null && currentAccount.name != "None") {

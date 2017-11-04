@@ -21,6 +21,8 @@ class FileObserverService : Service() {
 
     lateinit var cacheObserver: RecursiveFileObserver
 
+    var isRunning :Boolean =false
+
 
     override fun onBind(intent: Intent?): IBinder {
         Log.d("FileObserverService", "started")
@@ -29,17 +31,26 @@ class FileObserverService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("FileObserverService", "on start command")
-        val accountMgr = AccountManager.get(baseContext)
-        val restApi = RestApiImpl(baseContext)
-        filesObserver = LinkedList()
-        for (account in accountMgr.getAccountsByType(getString(R.string.authtype))) {
-            val accountFileObserver = RecursiveFileObserver(restApi, account, baseContext,
-                    File(baseContext.filesDir, account.name).absolutePath)
-            filesObserver.add(accountFileObserver)
-            accountFileObserver.startWatching()
-        }
+
+        if (isRunning)
+            for(observer in filesObserver) {
+                observer.stopWatching()
+                observer.startWatching()
+            }
+        else {
+            val accountMgr = AccountManager.get(baseContext)
+            val restApi = RestApiImpl(baseContext)
+            filesObserver = LinkedList()
+            for (account in accountMgr.getAccountsByType(getString(R.string.authtype))) {
+                val accountFileObserver = RecursiveFileObserver(restApi, account, baseContext,
+                        File(baseContext.filesDir, account.name).absolutePath)
+                filesObserver.add(accountFileObserver)
+                accountFileObserver.startWatching()
+            }
 //        cacheObserver = RecursiveFileObserver(baseContext.cacheDir.absolutePath)
 //        cacheObserver.startWatching()
+            isRunning = true
+        }
         return START_STICKY
     }
 

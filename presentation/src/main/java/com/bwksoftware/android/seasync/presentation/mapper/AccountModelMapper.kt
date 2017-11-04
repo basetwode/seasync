@@ -17,6 +17,7 @@
 package com.bwksoftware.android.seasync.presentation.mapper
 
 import android.view.MenuItem
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.presentation.model.NavButton
 import javax.inject.Inject
@@ -24,10 +25,11 @@ import android.accounts.Account as AndroidAccount
 import com.bwksoftware.android.seasync.presentation.model.Account as SeafAccount
 
 
-class AccountModelMapper @Inject constructor() {
+class AccountModelMapper @Inject constructor(val seafAccountManager: SeafAccountManager) {
 
     fun transformAccount(account: AndroidAccount): SeafAccount {
-        return SeafAccount("", account.name, "")
+        val address = seafAccountManager.getServerAddress(seafAccountManager.getCurrentAccount())
+        return SeafAccount("", account.name, "", address ?: "")
     }
 
     fun transformAccounts(accounts: List<AndroidAccount>): List<SeafAccount> {
@@ -35,7 +37,8 @@ class AccountModelMapper @Inject constructor() {
     }
 
     fun transformToAccount(account: AccountTemplate): SeafAccount {
-        return SeafAccount(account.token, account.username, account.imageUrl)
+        val address = seafAccountManager.getServerAddress(seafAccountManager.getCurrentAccount())
+        return SeafAccount(account.token, account.username, account.imageUrl, address ?: "")
     }
 
     fun transformToAccounts(accounts: List<AccountTemplate>): List<SeafAccount> {

@@ -60,15 +60,18 @@ class DataRepository @Inject constructor(private val restService: RestApiImpl,
     }
 
     override fun syncItem(authToken: String, repoId: String, directory: String, name: String,
-                          storage: String, type: String): Observable<Any> {
+                          storage: String, type: String): Observable<ItemTemplate> {
         return Observable.fromCallable {
-            storageManager.createNewSync(authToken, repoId, directory, name, storage, type)
+            entityDataMapper.transformItem(
+                    storageManager.createNewSync(authToken, repoId, directory, name, storage, type),
+                    repoId, directory)
         }
     }
 
-    override fun unsyncItem(repoId: String, directory: String, name: String): Observable<Any> {
+    override fun unsyncItem(repoId: String, directory: String, name: String): Observable<ItemTemplate> {
         return Observable.fromCallable {
-            storageManager.unsyncItem(repoId, directory, name)
+            entityDataMapper.transformItem(storageManager.unsyncItem(repoId, directory, name),
+                    repoId, directory)
         }
     }
 

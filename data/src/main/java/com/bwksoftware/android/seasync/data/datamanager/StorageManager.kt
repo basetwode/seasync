@@ -331,15 +331,17 @@ class StorageManager @Inject constructor(val context: Context,
                 null, null)
     }
 
-    fun unsyncItem(repoId: String, path: String, name: String) {
+    fun unsyncItem(repoId: String, path: String, name: String) :Item{
         val repo = getRepo(repoId)
         val item = getFile(repo!!.dbId.toString(), path + "/", name)
         deleteItemRecursive(item!!, repo)
         deleteParentsIfUnsyncedRecursive(repo, item)
+        item.synced = false
+        return item
     }
 
     fun createNewSync(authToken: String, repoHash: String, path: String, name: String,
-                      storage: String, type: String) {
+                      storage: String, type: String): Item {
 
         var localRepo = getRepo(repoHash)
         if (localRepo == null) {
@@ -363,6 +365,7 @@ class StorageManager @Inject constructor(val context: Context,
         saveItemInstance(itemToSync)
         localRepo!!.mtime = 0
         saveRepoInstance(localRepo!!)
+        return itemToSync
     }
 
     fun deleteParentsIfUnsyncedRecursive(repo: Repo, item: Item) {

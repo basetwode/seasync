@@ -28,6 +28,9 @@ class RecursiveFileObserver constructor(private val restApi: RestApiImpl,
         storageManager.setAccount(account)
         Log.d(TAG, "started watching $mPath")
         if (mObservers != null) return
+
+        val bla = mObservers?:false
+
         mObservers = ArrayList()
         val stack = Stack<String>()
         stack.push(mPath)
@@ -46,6 +49,7 @@ class RecursiveFileObserver constructor(private val restApi: RestApiImpl,
     }
 
     override fun stopWatching() {
+        Log.d(TAG,"Stopped watching")
         if (mObservers == null) return
 
         for (i in mObservers!!.indices)

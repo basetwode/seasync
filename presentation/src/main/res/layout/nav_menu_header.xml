@@ -3,10 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="178dp"
-    android:background="@drawable/drawer_bg"
+    android:id="@+id/navigation_header"
     android:orientation="vertical"
     android:weightSum="1">
-
+    <ImageView
+        android:id="@+id/navigation_background_img"
+        android:layout_width="match_parent"
+        android:src="@drawable/drawer_bg"
+        android:layout_height="match_parent" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -30,6 +34,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="viewEnd"
+            android:layout_marginEnd="15dp"
+            android:layout_marginRight="15dp"
+            android:textSize="17sp"
             android:text="▼" />
     </LinearLayout>
 
@@ -38,7 +45,7 @@
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="38dp"
+        android:layout_marginTop="46dp"
         android:elevation="12dp"
         android:innerRadius="0dp"
         android:shape="ring"

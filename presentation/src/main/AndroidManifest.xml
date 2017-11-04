@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".App"
@@ -30,29 +30,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:grantUriPermissions="true"
+            android:authorities="com.bwksoftware.android.seasync.data.fileprovider"
             android:exported="false"
-            android:authorities="com.bwksoftware.android.seasync.data.fileprovider">
+            android:grantUriPermissions="true">
 
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_provider_paths"/>
+                android:resource="@xml/file_provider_paths" />
 
         </provider>
 
         <provider
             android:name="com.bwksoftware.android.seasync.data.provider.FileRepoContentProvider"
             android:authorities="com.bwksoftware.android.seasync.data.sync"
-            android:exported="true"
+            android:exported="false"
             android:syncable="true" />
 
 
         <service
             android:name="com.bwksoftware.android.seasync.data.service.FileSyncService"
-            android:exported="true"
-            android:enabled="true">
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
@@ -61,8 +62,7 @@
                 android:resource="@xml/filereposyncadapter" />
         </service>
 
-        <service android:name="com.bwksoftware.android.seasync.data.service.FileObserverService">
-        </service>
+        <service android:name="com.bwksoftware.android.seasync.data.service.FileObserverService"></service>
 
         <service
             android:name="com.bwksoftware.android.seasync.data.authentication.AuthenticatorService"
@@ -77,10 +77,15 @@
                 android:resource="@xml/authenticator" />
         </service>
 
-        <receiver android:name="com.bwksoftware.android.seasync.data.service.OnBootReceiver"
+        <receiver
+            android:name="com.bwksoftware.android.seasync.data.service.OnBootReceiver"
             android:enabled="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+            <intent-filter>
+                <action
+                    android:name="com.bwksoftware.android.seasync.data.service.fileobserver.ACTION_START_FILE_OBSERVER" />
             </intent-filter>
         </receiver>
 

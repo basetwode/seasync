@@ -45,37 +45,41 @@ class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirecto
                 DirectoryObserver(), GetDirectoryEntries.Params(authToken, repoId, directory))
     }
 
-    fun directoryLongClicked(accountName: String, repoId: String, item: Item, directory: String,
+    fun directoryLongClicked(position: Int, accountName: String, repoId: String, item: Item,
+                             directory: String,storage:String,
                              isSynced: Boolean) {
         if (isSynced)
-            deleteSync.execute(CreateDeleteSyncObserver(),
+            deleteSync.execute(CreateDeleteSyncObserver(position),
                     DeleteSync.Params(repoId, directory, item.name!!))
         else {
             val authToken = authenticator.getCurrentUserAuthToken(accountName,
                     directoryView.activity())
-            createSync.execute(CreateDeleteSyncObserver(),
+            createSync.execute(CreateDeleteSyncObserver(position),
                     CreateSync.Params(authToken, repoId, directory, item.name!!,
-                            directoryView.activity().filesDir.absolutePath, "dir"))
+                            storage, "dir"))
         }
     }
 
-    fun fileLongClicked(accountName: String, repoId: String, item: Item, directory: String,
+    fun fileLongClicked(position: Int, accountName: String, repoId: String, item: Item,
+                        directory: String,storage:String,
                         isSynced: Boolean) {
         if (isSynced)
-            deleteSync.execute(CreateDeleteSyncObserver(),
+            deleteSync.execute(CreateDeleteSyncObserver(position),
                     DeleteSync.Params(repoId, directory, item.name!!))
         else {
             val authToken = authenticator.getCurrentUserAuthToken(accountName,
                     directoryView.activity())
-            createSync.execute(CreateDeleteSyncObserver(),
+            createSync.execute(CreateDeleteSyncObserver(position),
                     CreateSync.Params(authToken, repoId, directory, item.name!!,
-                            directoryView.activity().filesDir.absolutePath, "file"))
+                            storage, "file"))
         }
     }
 
-    private inner class CreateDeleteSyncObserver : DefaultObserver<Any>() {
-        override fun onNext(t: Any) {
+    private inner class CreateDeleteSyncObserver(
+            val position: Int) : DefaultObserver<ItemTemplate>() {
+        override fun onNext(t: ItemTemplate) {
             Log.d("DirectoryPresenter", "Sync created")
+            directoryView.updateItem(position, modelMapper.transformItem(t))
         }
     }
 

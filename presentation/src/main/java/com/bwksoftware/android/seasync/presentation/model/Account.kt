@@ -16,5 +16,5 @@
 
 package com.bwksoftware.android.seasync.presentation.model
 
-class Account(val token: String, val name: String, var imgLink: String) : NavBaseItem(
+class Account(val token: String, val name: String, var imgLink: String, val server:String) : NavBaseItem(
         NavBaseItem.TYPE_ACCOUNT)

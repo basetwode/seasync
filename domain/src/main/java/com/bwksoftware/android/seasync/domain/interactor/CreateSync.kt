@@ -1,5 +1,6 @@
 package com.bwksoftware.android.seasync.domain.interactor
 
+import com.bwksoftware.android.seasync.domain.ItemTemplate
 import com.bwksoftware.android.seasync.domain.executor.PostExecutionThread
 import com.bwksoftware.android.seasync.domain.executor.ThreadExecutor
 import com.bwksoftware.android.seasync.domain.repository.Repository
@@ -12,10 +13,10 @@ import javax.inject.Inject
  */
 class CreateSync @Inject
 internal constructor(val repository: Repository, threadExecutor: ThreadExecutor,
-                     postExecutionThread: PostExecutionThread) : UseCase<Any, CreateSync.Params>(
+                     postExecutionThread: PostExecutionThread) : UseCase<ItemTemplate, CreateSync.Params>(
         threadExecutor, postExecutionThread) {
 
-    override fun buildUseCaseObservable(params: Params): Observable<Any> {
+    override fun buildUseCaseObservable(params: Params): Observable<ItemTemplate> {
         return repository.syncItem(params.authToken, params.repoID, params.directory, params.name,
                 params.storage, params.type)
     }

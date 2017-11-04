@@ -34,9 +34,12 @@ import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Gravity
 import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import com.bwksoftware.android.seasync.data.provider.FileRepoContract
 import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.App
@@ -67,13 +70,17 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
     lateinit var coordinator: CoordinatorLayout
     lateinit private var accountAdapter: AccountAdapter
     lateinit private var navMenu: Menu
+    lateinit private var gridItem: MenuItem
 
-    private var reposFragment: ReposFragment? = null
+
+    private lateinit var reposFragment: ReposFragment
 
     @Inject
     lateinit var presenter: AccountPresenter
     @Inject
     lateinit var navigator: Navigator
+    @Inject
+    lateinit var sharedPreferences: SharedPrefsController
 
     private val component: ActivityComponent
         get() = DaggerActivityComponent.builder()
@@ -112,14 +119,17 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
     override fun onFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
                                directory: String, storage: String,
                                filename: String) {
-        if(storage.isEmpty())
+        if (storage.isEmpty())
             return
         val intent = Intent(Intent.ACTION_VIEW)
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-        val file = File(File(File(storage, presenter.currentAccount.name + "/" + repoName), directory), filename)
-        val uri = FileProvider.getUriForFile(this, "com.bwksoftware.android.seasync.data.fileprovider", file)
+        val file = File(
+                File(File(storage, presenter.currentAccount.name + "/" + repoName), directory),
+                filename)
+        val uri = FileProvider.getUriForFile(this,
+                "com.bwksoftware.android.seasync.data.fileprovider", file)
         intent.setDataAndType(uri, FileUtils.getMimeType(filename))
         Log.d("AccountActivity", FileUtils.getMimeType(filename))
         startActivity(Intent.createChooser(intent, "Select app to open"))
@@ -185,6 +195,7 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
         supportFragmentManager.popBackStack()
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -198,16 +209,85 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
         if (savedInstanceState == null) {
             initNavigationDrawer()
             presenter.init()
+
+
+            ContentResolver.setIsSyncable(presenter.currentAccount, baseContext.getString(
+                    com.bwksoftware.android.seasync.data.R.string.authtype), 1)
+            ContentResolver.setSyncAutomatically(presenter.currentAccount, baseContext.getString(
+                    com.bwksoftware.android.seasync.data.R.string.authtype), true);
+            ContentResolver.addPeriodicSync(presenter.currentAccount, baseContext.getString(
+                    com.bwksoftware.android.seasync.data.R.string.authtype), Bundle.EMPTY,
+                    120)
+            ContentResolver.setMasterSyncAutomatically(true)
+
+            Log.d("SeafAccountMgr", ContentResolver.getPeriodicSyncs(presenter.currentAccount,
+                    baseContext.getString(
+                            com.bwksoftware.android.seasync.data.R.string.authtype)).toString())
+
             initScreen()
         }
 
     }
 
+    fun updateViewInFragmentsRecursive(fragment: BaseFragment, isGrid: Boolean) {
+        if (fragment.childFragmentManager.backStackEntryCount > 0) {
+
+            val fragmentTag = fragment.childFragmentManager.getBackStackEntryAt(
+                    fragment.childFragmentManager.backStackEntryCount - 1).name
+            val activeFragment = fragment.childFragmentManager.findFragmentByTag(
+                    fragmentTag) as DirectoryFragment
+            activeFragment.switchView(!isGrid)
+            updateViewInFragmentsRecursive(activeFragment, isGrid)
+        }
+
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return when (item?.itemId) {
+            R.id.action_grid -> {
+                val isGrid = sharedPreferences.getPreferenceValue(
+                        SharedPrefsController.Preference.GRID_VIEW_DIRECTORIES).toBoolean()
+                sharedPreferences.setPreference(
+                        SharedPrefsController.Preference.GRID_VIEW_DIRECTORIES,
+                        (!isGrid).toString())
+                gridItem.icon = if (isGrid) resources.getDrawable(
+                        R.drawable.grid_off) else resources.getDrawable(
+                        R.drawable.grid_on)
+
+                if (reposFragment.childFragmentManager.backStackEntryCount > 0) {
+
+                    val fragmentTag = reposFragment.childFragmentManager.getBackStackEntryAt(
+                            reposFragment.childFragmentManager.backStackEntryCount - 1).name
+                    val activeFragment = reposFragment.childFragmentManager.findFragmentByTag(
+                            fragmentTag) as DirectoryFragment
+                    activeFragment.switchView(!isGrid)
+                    updateViewInFragmentsRecursive(activeFragment, isGrid)
+                }
+//
+                true
+            }
+            else -> false
+        }
+    }
+
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater = menuInflater
-        inflater.inflate(R.menu.nav_menu, menu)
-        navMenu = menu!!
-        presenter.showNavList(navMenu)
+
+        inflater.inflate(R.menu.action_bar, menu)
+        if (menu != null) {
+            val isGrid = sharedPreferences.getPreferenceValue(
+                    SharedPrefsController.Preference.GRID_VIEW_DIRECTORIES).toBoolean()
+            gridItem = menu.findItem(R.id.action_grid)
+            gridItem.icon = if (isGrid) resources.getDrawable(
+                    R.drawable.grid_off) else resources.getDrawable(
+                    R.drawable.grid_on)
+        }
+        val pMenu = PopupMenu(baseContext, null)
+
+        navMenu = pMenu.menu
+        pMenu.menuInflater.inflate(R.menu.nav_menu, pMenu.menu)
+        presenter.showNavList(pMenu.menu)
         return true
     }
 

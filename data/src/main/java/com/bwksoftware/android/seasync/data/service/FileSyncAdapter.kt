@@ -2,12 +2,15 @@ package com.bwksoftware.android.seasync.data.service
 
 import android.accounts.Account
 import android.accounts.AccountManager
+import android.app.NotificationManager
 import android.content.AbstractThreadedSyncAdapter
 import android.content.ContentProviderClient
 import android.content.Context
 import android.content.SyncResult
 import android.os.Bundle
+import android.support.v4.app.NotificationCompat
 import android.util.Log
+import com.bwksoftware.android.seasync.data.R
 import com.bwksoftware.android.seasync.data.datamanager.StorageManager
 import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
@@ -52,6 +55,14 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
         printFilesRecursive(mContext.filesDir)
         if (repos == null)
             return
+        val notificationMgr = mContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationBuilder=  NotificationCompat.Builder(context)
+        notificationBuilder.setContentTitle("Synchronizing ${p0.name}")
+        notificationBuilder.setContentText("Synchronization in progress")
+        notificationBuilder.setSmallIcon(R.drawable.ic_launcher_round)
+        notificationBuilder.setProgress(0, 0, true)
+        notificationMgr.notify(0,notificationBuilder.build())
+
         for (remoteRepo in repos!!) {
 
             var localRepo = storageManager.getRepo(remoteRepo)
@@ -73,6 +84,10 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
                 Log.d("FileSyncService", remoteRepo.name + " not marked for sync")
             }
         }
+        notificationBuilder.setContentText("Synchronization complete")
+                // Removes the progress bar
+                .setProgress(0,0,false)
+        notificationMgr.notify(0, notificationBuilder.build())
     }
 
     fun compareReposAndSync(contentProviderClient: ContentProviderClient, authToken: String,

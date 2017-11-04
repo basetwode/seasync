@@ -33,7 +33,7 @@ interface Repository {
                             directory: String): Observable<List<ItemTemplate>>
 
     fun syncItem(authToken: String, repoId: String, directory: String, name: String,
-                 storage: String, type: String): Observable<Any>
+                 storage: String, type: String): Observable<ItemTemplate>
 
-    fun unsyncItem(repoId: String, directory: String, name: String): Observable<Any>
+    fun unsyncItem(repoId: String, directory: String, name: String): Observable<ItemTemplate>
 }

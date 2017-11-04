@@ -37,6 +37,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Server address"
+                            android:text="cloud.bwk-technik.de"
                             android:inputType="text" />
 
                     </android.support.design.widget.TextInputLayout>
@@ -49,6 +50,7 @@
                             android:id="@+id/username"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:text="anselm.binninger@bwk-technik.de"
                             android:hint="Email"
                             android:inputType="textEmailAddress" />
 

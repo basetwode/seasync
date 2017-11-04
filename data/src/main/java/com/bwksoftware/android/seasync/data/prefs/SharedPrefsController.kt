@@ -17,6 +17,7 @@
 package com.bwksoftware.android.seasync.data.prefs
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.bwksoftware.android.seasync.data.BuildConfig
 import javax.inject.Inject
 
@@ -28,10 +29,16 @@ constructor(val context: Context) {
         CURRENT_USER_TOKEN(""),
         CURRENT_USER_ACCOUNT("None"),
         DISABLE_CONTROLS_FOR_BEGINNER("true"),
+        GRID_VIEW_DIRECTORIES("true"),
         SYNCED_LIBRARIES("")
     }
 
-    fun getPreference(preference: Preference): String {
+    fun getPreference(preference: Preference): SharedPreferences? {
+        return context.getSharedPreferences(
+                APP_IDENTIFIER, Context.MODE_PRIVATE)
+    }
+
+    fun getPreferenceValue(preference: Preference): String {
         val sharedPref = context.getSharedPreferences(
                 APP_IDENTIFIER, Context.MODE_PRIVATE)
         return sharedPref.getString(preference.toString(), preference.defaultValue)

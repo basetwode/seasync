@@ -20,12 +20,12 @@ import android.accounts.Account
 import android.content.Context
 import android.util.Log
 import android.view.Menu
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
 import com.bwksoftware.android.seasync.domain.interactor.GetAllAccounts
 import com.bwksoftware.android.seasync.presentation.R
-import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.internal.di.scope.PerActivity
 import com.bwksoftware.android.seasync.presentation.mapper.AccountModelMapper
 import com.bwksoftware.android.seasync.presentation.model.NavBaseItem
@@ -50,6 +50,7 @@ class AccountPresenter @Inject constructor(
     fun init() {
         currentAccount = seafAccountManager.getCurrentAccount()
     }
+
 
     fun showNavList(menu: Menu) {
         showsAccounts = false
@@ -89,7 +90,7 @@ class AccountPresenter @Inject constructor(
             val otherItems: List<NavBaseItem>) : DefaultObserver<List<AccountTemplate>>() {
         override fun onError(exception: Throwable) {
             Log.d("AccountPresenter", "yolo error" + exception.localizedMessage)
-            view.showNavList(listOf(SeafAccount("", "", "None")) + otherItems)
+            view.showNavList(listOf(SeafAccount("", "", "None","")) + otherItems)
         }
 
         override fun onNext(accounts: List<AccountTemplate>) {

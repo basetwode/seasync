@@ -16,9 +16,10 @@
 
 package com.bwksoftware.android.seasync.presentation
 
-import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
+import android.content.Intent
+import com.bwksoftware.android.seasync.data.service.OnBootReceiver.Companion.ACTION_START_FILE_OBSERVER
 import com.bwksoftware.android.seasync.presentation.components.AuthImageDownloader
 import com.bwksoftware.android.seasync.presentation.components.NutraBaseImageDecoder
 import com.bwksoftware.android.seasync.presentation.internal.di.components.ApplicationComponent
@@ -40,14 +41,15 @@ class App : Application() {
     }
 
     fun startFileObserverIfNotRunning(){
-        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        //for(service in manager.ru)
+        val intent = Intent(ACTION_START_FILE_OBSERVER)
+        sendBroadcast(intent)
     }
 
     override fun onCreate() {
         super.onCreate()
         component.inject(this)
-        initImageLoader(applicationContext);
+        initImageLoader(applicationContext)
+        startFileObserverIfNotRunning()
     }
 
     fun initImageLoader(context: Context) {

@@ -3,7 +3,7 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/repos"
-            android:icon="@drawable/repo"
+            android:icon="@drawable/list"
             android:title="All repositories" />
 
 

@@ -26,19 +26,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.model.DirectoryItem
 import com.bwksoftware.android.seasync.presentation.model.FileItem
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_DIRECTORY
 import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_FILE
-import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
 import java.net.URLEncoder
 
 
 class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
+                       var isGridView: Boolean,
                        val address: String,
                        val repoId: String, val directory: String,
                        val token: String,
@@ -50,6 +51,12 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
         mItems.clear()
         mItems.addAll(newItems)
     }
+
+    fun setItem(position: Int, item: Item) {
+        mItems[position] = item
+    }
+
+    fun getItem(position: Int): Item = mItems[position]
 
     override fun getItemViewType(position: Int): Int {
         return mItems[position].type
@@ -63,17 +70,17 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
         val view: View
         return when (viewType) {
             TYPE_FILE -> {
-                view = LayoutInflater.from(parent?.context).inflate(R.layout.file_item,
+                view = LayoutInflater.from(parent?.context).inflate(getFileLayout(isGridView),
                         parent, false)
                 FileHolder(view)
             }
             TYPE_DIRECTORY -> {
-                view = LayoutInflater.from(parent?.context).inflate(R.layout.directory_item,
+                view = LayoutInflater.from(parent?.context).inflate(getDirectoryLayout(isGridView),
                         parent, false)
                 DirectoryHolder(view)
             }
             else -> {
-                view = LayoutInflater.from(parent?.context).inflate(R.layout.directory_item,
+                view = LayoutInflater.from(parent?.context).inflate(getDirectoryLayout(isGridView),
                         parent, false)
                 DirectoryHolder(view)
             }
@@ -93,12 +100,17 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
                     item.size!!) + ", " + FileUtils.translateCommitTime(item.mtime!! * 1000,
                     context)
             if (FileUtils.isViewableImage(item.name!!)) {
+                holder.itemName.visibility = if (isGridView) View.GONE else View.VISIBLE
+
                 val file = URLEncoder.encode(directory + "/" + item.name, "UTF-8")
                 val url = FileUtils.getThumbnailUrl(address, repoId, file, 100)
                 ImageLoader.getInstance().displayImage(url, holder.itemImg, getDisplayImageOptions);
 
-            } else
+            } else {
                 holder.itemImg.setImageResource(R.drawable.empty_profile)
+                holder.itemName.visibility = View.VISIBLE
+
+            }
 
         } else if (holder is DirectoryHolder && item is DirectoryItem) {
             holder.syncedImg.visibility = if (item.synced) View.VISIBLE else View.GONE
@@ -115,6 +127,8 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
     inner class FileHolder(itemView: View) : RecyclerView.ViewHolder(
             itemView), View.OnClickListener, View.OnLongClickListener {
 
+
+
         init {
             itemView.setOnClickListener(this)
             itemView.setOnLongClickListener(this)
@@ -122,12 +136,12 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
 
         override fun onClick(v: View?) {
             val item: Item = mItems[layoutPosition]
-            onItemClickLister.onFileClicked(item)
+            onItemClickLister.onFileClicked(item, layoutPosition)
         }
 
         override fun onLongClick(v: View?): Boolean {
             val item: Item = mItems[layoutPosition]
-            onItemClickLister.onFileLongClicked(item)
+            onItemClickLister.onFileLongClicked(item, layoutPosition)
             return true
         }
 
@@ -148,12 +162,12 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
 
         override fun onClick(v: View?) {
             val item: Item = mItems[layoutPosition]
-            onItemClickLister.onDirectoryClicked(item)
+            onItemClickLister.onDirectoryClicked(item, layoutPosition)
         }
 
         override fun onLongClick(v: View?): Boolean {
             val item: Item = mItems[layoutPosition]
-            onItemClickLister.onDirectoryLongClicked(item)
+            onItemClickLister.onDirectoryLongClicked(item, layoutPosition)
             return true
         }
 
@@ -164,14 +178,30 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
     }
 
     interface OnItemClickListener {
-        fun onDirectoryClicked(item: Item)
-        fun onDirectoryLongClicked(item: Item)
-        fun onFileClicked(item: Item)
-        fun onFileLongClicked(item: Item)
+        fun onDirectoryClicked(item: Item, position: Int)
+        fun onDirectoryLongClicked(item: Item, position: Int)
+        fun onFileClicked(item: Item, position: Int)
+        fun onFileLongClicked(item: Item, position: Int)
 
     }
 
-    var getDisplayImageOptions: DisplayImageOptions? =
+
+    companion object {
+        private val GRID_LAYOUT_FILE = R.layout.file_item_grid
+        private val LIST_LAYOUT_FILE = R.layout.file_item
+        private val GRID_LAYOUT_DIRECTORY = R.layout.directory_item_grid
+        private val LIST_LAYOUT_DIRECTORY = R.layout.directory_item
+
+        fun getFileLayout(isGridView: Boolean): Int {
+            return if (isGridView) GRID_LAYOUT_FILE else LIST_LAYOUT_FILE
+        }
+
+        fun getDirectoryLayout(isGridView: Boolean): Int {
+            return if (isGridView) GRID_LAYOUT_DIRECTORY else LIST_LAYOUT_DIRECTORY
+        }
+    }
+
+    private var getDisplayImageOptions: DisplayImageOptions? =
             DisplayImageOptions.Builder()
                     .extraForDownloader(token)
                     .delayBeforeLoading(50)

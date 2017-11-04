@@ -68,10 +68,10 @@ class Navigator @Inject constructor() {
 
         val transaction = fragmentManager.beginTransaction()
         // Store the Fragment in stack
-        transaction.addToBackStack(DirectoryFragment::class.java.name)
+        transaction.addToBackStack(DirectoryFragment::class.java.name+directory)
         //        transaction.setCustomAnimations(R.anim.enter_from_center,R.anim.exit_from_center);
         transaction.replace(R.id.container, directoryFragment,
-                DirectoryFragment::class.java.name).commit()
+                DirectoryFragment::class.java.name+directory).commit()
         fragmentManager.executePendingTransactions()
         setName(context, directoryFragment, fragmentManager)
 

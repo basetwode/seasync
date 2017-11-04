@@ -7,11 +7,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.RelativeLayout
-import com.bwksoftware.android.seasync.presentation.R
-import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.data.utils.FileUtils
+import com.bwksoftware.android.seasync.presentation.R
+import com.bwksoftware.android.seasync.presentation.components.TouchImageView
+import com.bwksoftware.android.seasync.presentation.model.Item
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
 import java.net.URLEncoder
@@ -38,13 +38,14 @@ class ImageViewerAdapter(val context: Context,
         return mItems.size
     }
 
+
     override fun instantiateItem(container: ViewGroup?, position: Int): Any {
         val item = mItems[position]
         val inflater = context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val viewLayout = inflater.inflate(R.layout.fragment_imageviewerpage, container,
                 false)
-        val imgDisplay: ImageView = viewLayout.findViewById(R.id.imgDisplay)
+        val imgDisplay: TouchImageView = viewLayout.findViewById(R.id.imgDisplay)
         val btnClose: Button = viewLayout.findViewById(R.id.btnClose)
 
         val fileName = URLEncoder.encode(directory + "/" + item.name, "UTF-8")

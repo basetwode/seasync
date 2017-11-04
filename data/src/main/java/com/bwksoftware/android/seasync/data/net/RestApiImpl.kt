@@ -112,7 +112,6 @@ class RestApiImpl @Inject constructor(val context: Context) {
 
     fun updateFile(url: String, authToken: String, targetFilePath: String,
                    targetFile: File): Call<String> {
-        //TODO: fall back if mimetype unknown
         val requestFile = RequestBody.create(
                 MediaType.parse(FileUtils.getMimeType(
                         targetFile.name).toString()),

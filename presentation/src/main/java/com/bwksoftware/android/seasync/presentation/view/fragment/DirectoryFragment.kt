@@ -18,29 +18,36 @@ package com.bwksoftware.android.seasync.presentation.view.fragment
 
 import android.accounts.Account
 import android.os.Bundle
+import android.support.design.widget.BottomSheetDialog
 import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
+import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.R
+import com.bwksoftware.android.seasync.presentation.components.GridLayoutManager
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.DirectoryPresenter
-import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.view.adapter.DirectoryAdapter
 import com.bwksoftware.android.seasync.presentation.view.views.DirectoryView
+import com.nostra13.universalimageloader.core.DisplayImageOptions
+import com.nostra13.universalimageloader.core.ImageLoader
+import java.net.URLEncoder
 import javax.inject.Inject
 
 
 class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItemClickListener {
-
 
     interface OnDirectoryClickedListener {
         fun onDirectoryClicked(fragment: BaseFragment, repoId: String, repoName: String,
                                directory: String)
 
         fun onFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
-                          directory: String,storage:String, file: String)
+                          directory: String, storage: String, file: String)
 
         fun onImageClicked(fragment: BaseFragment, repoId: String, repoName: String,
                            directory: String, file: String)
@@ -69,6 +76,7 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
 
     @Inject lateinit var directoryPresenter: DirectoryPresenter
     @Inject lateinit var seafAccountManager: SeafAccountManager
+    @Inject lateinit var seafPreferences: SharedPrefsController
 
     lateinit var directoryAdapter: DirectoryAdapter
 
@@ -81,11 +89,14 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
 
     override fun activity() = activity
 
+    private lateinit var address: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appComponent.inject(this)
-        val address = seafAccountManager.getServerAddress(seafAccountManager.getCurrentAccount())
+        address = seafAccountManager.getServerAddress(seafAccountManager.getCurrentAccount())!!
         directoryAdapter = DirectoryAdapter(this,
+                isGridView(),
                 address!!,
                 arguments.getString(PARAM_REPOID),
                 arguments.getString(
@@ -96,13 +107,7 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         super.onViewCreated(view, savedInstanceState)
         rvDirectory = view?.findViewById(R.id.rv_directory)!!
         rvDirectory.adapter = directoryAdapter
-        rvDirectory.layoutManager = LinearLayoutManager(this.context)
-        val mDividerItemDecoration = DividerItemDecoration(
-                rvDirectory.getContext(),
-                (rvDirectory.layoutManager as LinearLayoutManager).orientation
-        )
 
-        rvDirectory.addItemDecoration(mDividerItemDecoration)
         if (firstTimeCreated(savedInstanceState)) {
             initializeView()
             loadDirectory()
@@ -114,7 +119,15 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         directoryAdapter.notifyDataSetChanged()
     }
 
-    override fun onDirectoryClicked(item: Item) {
+    override fun updateItem(position: Int, item: Item) {
+        val currItem = directoryAdapter.getItem(position)
+        currItem.synced = item.synced
+        currItem.storage = item.storage
+        directoryAdapter.notifyItemChanged(position)
+    }
+
+
+    override fun onDirectoryClicked(item: Item, position: Int) {
         val attachedActivity = activity
         when (attachedActivity) {
             is OnDirectoryClickedListener -> attachedActivity.onDirectoryClicked(this,
@@ -124,11 +137,11 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         }
     }
 
-    override fun onFileClicked(item: Item) {
+    override fun onFileClicked(item: Item, position: Int) {
         val attachedActivity = activity
         when (attachedActivity) {
             is OnDirectoryClickedListener -> {
-                if(FileUtils.isViewableImage(item.name!!))
+                if (FileUtils.isViewableImage(item.name!!))
                     attachedActivity.onImageClicked(this,
                             arguments.getString(PARAM_REPOID),
                             arguments.getString(PARAM_REPONAME),
@@ -137,22 +150,90 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                     attachedActivity.onFileClicked(this,
                             arguments.getString(PARAM_REPOID),
                             arguments.getString(PARAM_REPONAME),
-                            arguments.getString(PARAM_DIRECTORY),item.storage!!, item.name)
+                            arguments.getString(PARAM_DIRECTORY), item.storage!!, item.name)
 
             }
         }
     }
 
-    override fun onDirectoryLongClicked(item: Item) {
-        directoryPresenter.directoryLongClicked(arguments.getString(PARAM_ACCOUNT), arguments.getString(
-                PARAM_REPOID), item,
-                arguments.getString(PARAM_DIRECTORY), item.synced)
+    override fun onDirectoryLongClicked(item: Item, position: Int) {
+
+
+        val mBottomSheetDialog = BottomSheetDialog(activity)
+        val sheetView = activity.layoutInflater.inflate(R.layout.item_bottom_sheet,
+                null)
+        mBottomSheetDialog.setContentView(sheetView)
+        val bottomSheet = BottomSheet(item, sheetView)
+        bottomSheet.openButton.setOnClickListener({
+            onDirectoryClicked(item, position)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncExternalStorage.setOnClickListener({
+            syncUnsyncDir(position, item, context.getExternalFilesDir(null).absolutePath)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncInternalStorage.setOnClickListener({
+            syncUnsyncDir(position, item, context.filesDir.absolutePath)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncButton.setOnClickListener({
+            if (item.synced) {
+                syncUnsyncDir(position, item, "")
+                mBottomSheetDialog.dismiss()
+            } else {
+                bottomSheet.options.visibility = if (bottomSheet.options.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+            }
+        })
+        mBottomSheetDialog.show()
+
+
     }
 
-    override fun onFileLongClicked(item: Item) {
-        directoryPresenter.fileLongClicked(arguments.getString(PARAM_ACCOUNT), arguments.getString(
-                PARAM_REPOID), item,
-                arguments.getString(PARAM_DIRECTORY), item.synced)
+    override fun onFileLongClicked(item: Item, position: Int) {
+
+        val mBottomSheetDialog = BottomSheetDialog(activity)
+        val sheetView = activity.layoutInflater.inflate(R.layout.item_bottom_sheet,
+                null)
+        mBottomSheetDialog.setContentView(sheetView)
+        val bottomSheet = BottomSheet(item, sheetView)
+        bottomSheet.openButton.setOnClickListener({
+            onFileClicked(item, position)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncExternalStorage.setOnClickListener({
+            syncUnsyncFile(position, item, context.getExternalFilesDir(null).absolutePath)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncInternalStorage.setOnClickListener({
+            syncUnsyncFile(position, item, context.filesDir.absolutePath)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncButton.setOnClickListener({
+            if (item.synced) {
+                syncUnsyncFile(position, item, "")
+                mBottomSheetDialog.dismiss()
+            } else {
+                bottomSheet.options.visibility = if (bottomSheet.options.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+            }
+        })
+        mBottomSheetDialog.show()
+
+//
+
+    }
+
+    private fun syncUnsyncDir(position: Int, item: Item, storage: String) {
+        directoryPresenter.directoryLongClicked(position, arguments.getString(PARAM_ACCOUNT),
+                arguments.getString(
+                        PARAM_REPOID), item,
+                arguments.getString(PARAM_DIRECTORY), storage, item.synced)
+    }
+
+    private fun syncUnsyncFile(position: Int, item: Item, storage: String) {
+        directoryPresenter.fileLongClicked(position, arguments.getString(PARAM_ACCOUNT),
+                arguments.getString(
+                        PARAM_REPOID), item,
+                arguments.getString(PARAM_DIRECTORY), storage, item.synced)
     }
 
 
@@ -162,12 +243,96 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                         PARAM_REPOID), arguments.getString(PARAM_DIRECTORY))
     }
 
+    private fun getGridColumns(isGridView: Boolean): Int {
+        return if (!isGridView()) 1 else context.resources.getInteger(
+                R.integer.gv_number_of_columns)
+    }
+
+    private var mDividerItemDecoration: DividerItemDecoration? = null
+
+    fun switchView(isGridView: Boolean) {
+        val layoutMgr = GridLayoutManager(context, getGridColumns(isGridView))
+        rvDirectory.layoutManager = layoutMgr
+        if (!isGridView) {
+            mDividerItemDecoration = DividerItemDecoration(
+                    rvDirectory.context,
+                    (rvDirectory.layoutManager as GridLayoutManager).orientation
+            )
+
+            rvDirectory.addItemDecoration(mDividerItemDecoration)
+        } else {
+            rvDirectory.removeItemDecoration(mDividerItemDecoration)
+        }
+
+        directoryAdapter.isGridView = isGridView
+        rvDirectory.adapter = directoryAdapter
+        directoryAdapter.notifyDataSetChanged()
+    }
+
+    private fun isGridView(): Boolean {
+        val pref = seafPreferences.getPreferenceValue(
+                SharedPrefsController.Preference.GRID_VIEW_DIRECTORIES)
+        return pref.toBoolean()
+    }
+
+
     private fun initializeView() {
         directoryPresenter.directoryView = this
         rvDirectory.setHasFixedSize(true)
         rvDirectory.setItemViewCacheSize(20)
         rvDirectory.isDrawingCacheEnabled = true
         rvDirectory.drawingCacheQuality = View.DRAWING_CACHE_QUALITY_HIGH
+        switchView(isGridView())
     }
+
+    inner class BottomSheet(item: Item, view: View) {
+        val options: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_options)
+
+        val openButton: LinearLayout = view.findViewById(R.id.bottom_sheet_open)
+        val syncButton: LinearLayout = view.findViewById(R.id.bottom_sheet_sync)
+        val syncButtonImg: ImageView = view.findViewById(R.id.bottom_sheet_sync_img)
+        val syncButtonText: TextView = view.findViewById(R.id.bottom_sheet_sync_text)
+        val title: TextView = view.findViewById(R.id.bottom_sheet_title)
+        val details: TextView = view.findViewById(R.id.bottom_sheet_details)
+        val syncExternalStorage: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_external)
+        val syncInternalStorage: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_internal)
+
+        val itemImage: ImageView = view.findViewById(R.id.bottom_sheet_image)
+
+        init {
+            title.text = item.name
+            if (item.synced) {
+                syncButtonImg.setImageDrawable(context.resources.getDrawable(R.drawable.unsync))
+                syncButtonText.text = "Unsync item"
+            } else {
+                syncButtonImg.setImageDrawable(context.resources.getDrawable(R.drawable.sync))
+                syncButtonText.text = "Sync item"
+            }
+            details.text = FileUtils.readableFileSize(
+                    item.size!!) + ", " + FileUtils.translateCommitTime(item.mtime!! * 1000,
+                    context)
+            if (FileUtils.isViewableImage(item.name!!)) {
+                val dir = arguments.getString(PARAM_DIRECTORY)
+                val repo = arguments.getString(PARAM_REPOID)
+
+                val file = URLEncoder.encode(dir + "/" + item.name, "UTF-8")
+                val url = FileUtils.getThumbnailUrl(address, repo, file, 120)
+                ImageLoader.getInstance().displayImage(url, itemImage, getDisplayImageOptions())
+            }
+
+        }
+    }
+
+    fun getDisplayImageOptions(): DisplayImageOptions? =
+            DisplayImageOptions.Builder()
+                    .extraForDownloader(seafAccountManager.getCurrentAccountToken())
+                    .delayBeforeLoading(50)
+                    .resetViewBeforeLoading(true)
+                    .showImageForEmptyUri(R.drawable.empty_profile)
+                    .showImageOnFail(R.drawable.empty_profile)
+                    .cacheInMemory(true)
+                    .cacheOnDisk(true)
+                    .considerExifParams(true)
+                    .build()
 
 }
