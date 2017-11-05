@@ -94,6 +94,13 @@ class SeafAccountManager @Inject constructor(val context: Context,
             return ""
         }
     }
-
+    fun deleteAccount(accountName: String){
+        val accountManager = AccountManager.get(context)
+        val account = Account(accountName, context.getString(R.string.authtype))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            accountManager.removeAccountExplicitly(account)
+            //TODO implement it for earlier versions
+        }
+    }
 
 }

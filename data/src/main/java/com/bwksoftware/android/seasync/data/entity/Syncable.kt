@@ -6,9 +6,10 @@ package com.bwksoftware.android.seasync.data.entity
 open class Syncable {
     open var synced: Boolean? = null
 
-    open var storage: String? =null
+    open var storage: String? = null
 
     open var path: String? = "/"
     open var dbId: Long? = null
+    open var isRootSync: Boolean? = null
 
 }

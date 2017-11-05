@@ -43,6 +43,13 @@
                 android:layout_marginLeft="15dp"
                 android:layout_marginTop="5dp"
                 android:text="asd" />
+            <TextView
+                android:id="@+id/bottom_sheet_local_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="2dp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -101,7 +108,30 @@
             android:layout_marginLeft="16dp"
             android:text="Sync item" />
     </LinearLayout>
+    <LinearLayout
+        android:id="@+id/bottom_sheet_reveal_finder"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:clickable="true"
+        android:visibility="gone"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:orientation="horizontal"
+        android:padding="16dp">
 
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="28dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/search" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="16dp"
+            android:text="Reveal in file explorer " />
+    </LinearLayout>
     <LinearLayout
         android:id="@+id/bottom_sheet_sync_options"
         android:layout_width="match_parent"
@@ -160,6 +190,7 @@
                 android:layout_marginLeft="16dp"
                 android:text="External App Storage" />
         </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>

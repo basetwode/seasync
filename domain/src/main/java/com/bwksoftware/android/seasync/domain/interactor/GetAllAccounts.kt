@@ -18,7 +18,7 @@ internal constructor(val repository: Repository, threadExecutor: ThreadExecutor,
             subscriber ->
             for (account in params.listAccounts) {
                 val avatarTemplate = repository.getAvatar(account.username,
-                        params.authToken).blockingLast()
+                        params.authToken).blockingFirst()
                 account.imageUrl = avatarTemplate.url
             }
             subscriber.onNext(params.listAccounts)

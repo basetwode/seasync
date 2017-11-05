@@ -15,7 +15,7 @@
     <ImageView
         android:id="@+id/repo_img"
 
-        android:scaleType="centerCrop"
+        android:scaleType="centerInside"
         android:src="@drawable/empty_profile"
         android:layout_height="match_parent"
         android:layout_width="match_parent"/>
@@ -38,7 +38,7 @@
             android:id="@+id/repo_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="20dp"
+            android:paddingLeft="15dp"
             android:text="Medium Text"
             android:ellipsize="end"
             android:textAppearance="?android:attr/textAppearanceMedium"
@@ -49,10 +49,10 @@
             android:id="@+id/repo_datemodified"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="20dp"
+            android:paddingLeft="15dp"
             android:text="Medium Text"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@android:color/black"
+            android:textColor="@color/cardview_dark_background"
             android:textSize="13sp" />
     </LinearLayout>
 

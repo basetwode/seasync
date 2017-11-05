@@ -30,7 +30,8 @@ constructor(val context: Context) {
         CURRENT_USER_ACCOUNT("None"),
         DISABLE_CONTROLS_FOR_BEGINNER("true"),
         GRID_VIEW_DIRECTORIES("true"),
-        SYNCED_LIBRARIES("")
+        SYNCED_LIBRARIES(""),
+        CACHE_LAST_UPDATE("0")
     }
 
     fun getPreference(preference: Preference): SharedPreferences? {

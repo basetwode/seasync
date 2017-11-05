@@ -17,6 +17,8 @@
 package com.bwksoftware.android.seasync.presentation.view.fragment
 
 import android.accounts.Account
+import android.graphics.Color
+import android.graphics.LightingColorFilter
 import android.os.Bundle
 import android.support.design.widget.BottomSheetDialog
 import android.support.v7.widget.DividerItemDecoration
@@ -30,6 +32,7 @@ import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.components.GridLayoutManager
+import com.bwksoftware.android.seasync.presentation.model.DirectoryItem
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.DirectoryPresenter
 import com.bwksoftware.android.seasync.presentation.view.adapter.DirectoryAdapter
@@ -52,6 +55,8 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         fun onImageClicked(fragment: BaseFragment, repoId: String, repoName: String,
                            directory: String, file: String)
 
+        fun onRevealClicked(fragment: BaseFragment, repoId: String, repoName: String,
+                            directory: String, storage: String,file: String)
     }
 
     companion object {
@@ -122,7 +127,9 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
     override fun updateItem(position: Int, item: Item) {
         val currItem = directoryAdapter.getItem(position)
         currItem.synced = item.synced
+        currItem.isCached = item.isCached
         currItem.storage = item.storage
+        currItem.isRootSync = item.isRootSync
         directoryAdapter.notifyItemChanged(position)
     }
 
@@ -146,12 +153,23 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                             arguments.getString(PARAM_REPOID),
                             arguments.getString(PARAM_REPONAME),
                             arguments.getString(PARAM_DIRECTORY), item.name)
-                else
-                    attachedActivity.onFileClicked(this,
-                            arguments.getString(PARAM_REPOID),
-                            arguments.getString(PARAM_REPONAME),
-                            arguments.getString(PARAM_DIRECTORY), item.storage!!, item.name)
-
+                else {
+                    if (item.synced) {
+                        attachedActivity.onFileClicked(this,
+                                arguments.getString(PARAM_REPOID),
+                                arguments.getString(PARAM_REPONAME),
+                                arguments.getString(PARAM_DIRECTORY), item.storage!!, item.name)
+                    } else if (item.isCached) {
+                        attachedActivity.onFileClicked(this,
+                                arguments.getString(PARAM_REPOID),
+                                arguments.getString(PARAM_REPOID),
+                                arguments.getString(PARAM_DIRECTORY), item.storage!!, item.name)
+                    } else {
+                        directoryPresenter.fileClicked(position, arguments.getString(PARAM_ACCOUNT),
+                                arguments.getString(PARAM_REPOID), item, arguments.getString(
+                                PARAM_DIRECTORY))
+                    }
+                }
             }
         }
     }
@@ -218,8 +236,18 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         })
         mBottomSheetDialog.show()
 
-//
+    }
 
+    override fun fileDownloadComplete(item: Item) {
+        val attachedActivity = activity
+        when (attachedActivity) {
+            is OnDirectoryClickedListener -> {
+                attachedActivity.onFileClicked(this,
+                        arguments.getString(PARAM_REPOID),
+                        arguments.getString(PARAM_REPOID),
+                        arguments.getString(PARAM_DIRECTORY), item.storage!!, item.name!!)
+            }
+        }
     }
 
     private fun syncUnsyncDir(position: Int, item: Item, storage: String) {
@@ -296,18 +324,46 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         val details: TextView = view.findViewById(R.id.bottom_sheet_details)
         val syncExternalStorage: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_external)
         val syncInternalStorage: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_internal)
-
+        val localDetails: TextView = view.findViewById(R.id.bottom_sheet_local_details)
         val itemImage: ImageView = view.findViewById(R.id.bottom_sheet_image)
+        val revealInFinder: LinearLayout = view.findViewById(R.id.bottom_sheet_reveal_finder)
 
         init {
             title.text = item.name
+            if (item.synced && !item.isRootSync) {
+                syncButton.isEnabled = false
+                val filter = LightingColorFilter(Color.WHITE,
+                        resources.getColor(R.color.disabledGreyDark))
+                syncButtonImg.colorFilter = filter
+                syncButtonText.setTextColor(resources.getColor(R.color.disabledGreyDark))
+                syncButton.setBackgroundColor(resources.getColor(R.color.disabledGrey))
+            }
             if (item.synced) {
+                localDetails.text = "Location: ${item.storage}"
                 syncButtonImg.setImageDrawable(context.resources.getDrawable(R.drawable.unsync))
                 syncButtonText.text = "Unsync item"
             } else {
                 syncButtonImg.setImageDrawable(context.resources.getDrawable(R.drawable.sync))
                 syncButtonText.text = "Sync item"
             }
+            if (item.isCached)
+                localDetails.text = "Location: ${item.storage}"
+
+            if (item.storage == activity.getExternalFilesDir(null).absolutePath)
+                revealInFinder.visibility = View.VISIBLE
+
+            revealInFinder.setOnClickListener {
+                val attachedActivity = activity
+                when (attachedActivity) {
+                    is OnDirectoryClickedListener -> {
+                        attachedActivity.onRevealClicked(this@DirectoryFragment,
+                                arguments.getString(PARAM_REPOID),
+                                arguments.getString(PARAM_REPONAME),
+                                arguments.getString(PARAM_DIRECTORY),item.storage, item.name!!)
+                    }
+                }
+            }
+
             details.text = FileUtils.readableFileSize(
                     item.size!!) + ", " + FileUtils.translateCommitTime(item.mtime!! * 1000,
                     context)
@@ -316,9 +372,10 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                 val repo = arguments.getString(PARAM_REPOID)
 
                 val file = URLEncoder.encode(dir + "/" + item.name, "UTF-8")
-                val url = FileUtils.getThumbnailUrl(address, repo, file, 120)
+                val url = FileUtils.getThumbnailUrl(address, repo, file, 100)
                 ImageLoader.getInstance().displayImage(url, itemImage, getDisplayImageOptions())
-            }
+            } else if (item is DirectoryItem)
+                itemImage.setImageDrawable(resources.getDrawable(R.drawable.folder))
 
         }
     }

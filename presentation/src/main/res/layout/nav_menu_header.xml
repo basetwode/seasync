@@ -9,6 +9,8 @@
     <ImageView
         android:id="@+id/navigation_background_img"
         android:layout_width="match_parent"
+        android:layout_margin="10dp"
+        android:scaleType="fitCenter"
         android:src="@drawable/drawer_bg"
         android:layout_height="match_parent" />
     <LinearLayout

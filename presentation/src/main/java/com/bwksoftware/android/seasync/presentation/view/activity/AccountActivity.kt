@@ -19,6 +19,7 @@ package com.bwksoftware.android.seasync.presentation.view.activity
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.CoordinatorLayout
@@ -116,6 +117,18 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
     }
 
 
+    override fun onRevealClicked(fragment: BaseFragment, repoId: String, repoName: String,
+                                 directory: String, storage: String,
+                                 filename: String) {
+
+        val intent = Intent(Intent.ACTION_VIEW)
+
+        val file = File(File(storage, presenter.currentAccount.name + "/" + repoName), directory)
+        val uri = Uri.parse("${file.absolutePath}")
+        intent.setDataAndType(uri,"resource/folder")
+        startActivity(Intent.createChooser(intent, "Select app to open"))
+    }
+
     override fun onFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
                                directory: String, storage: String,
                                filename: String) {
@@ -146,21 +159,21 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
     override fun onButtonClicked(itemId: Int) {
         when (itemId) {
             R.id.repos -> {
-                val params = Bundle()
-                params.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true)
-                params.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
-                ContentResolver.requestSync(presenter.currentAccount,
-                        "com.bwksoftware.android.seasync.data.sync", params)
                 navigator.navigateToReposView(this, supportFragmentManager,
                         presenter.currentAccount)
-
-
             }
             R.id.uploads -> {
                 navigator.navigateToUploadsView(this, supportFragmentManager)
             }
             R.id.add_account -> {
                 navigator.navigateToAddAccountView(this, supportFragmentManager)
+            }
+            R.id.sync -> {
+                val params = Bundle()
+                params.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true)
+                params.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
+                ContentResolver.requestSync(presenter.currentAccount,
+                        "com.bwksoftware.android.seasync.data.sync", params)
             }
         }
         drawerLayout.closeDrawer(Gravity.START)

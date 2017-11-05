@@ -65,6 +65,7 @@ class Item : Syncable() {
 
     val childItems = LinkedList<Item>()
     var parentItem: Item? = null
+    var isCached: Boolean = false
 
     fun areChildItemsSynced(mtime: Long): Boolean {
         var result = true

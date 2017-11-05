@@ -22,9 +22,7 @@ import com.bwksoftware.android.seasync.domain.ItemTemplate
 import com.bwksoftware.android.seasync.domain.RepoTemplate
 import io.reactivex.Observable
 
-/**
- * Created by ansel on 10/10/2017.
- */
+
 interface Repository {
     fun getRepoList(authToken: String): Observable<List<RepoTemplate>>
     fun getAvatar(username: String, authToken: String): Observable<AvatarTemplate>
@@ -36,4 +34,6 @@ interface Repository {
                  storage: String, type: String): Observable<ItemTemplate>
 
     fun unsyncItem(repoId: String, directory: String, name: String): Observable<ItemTemplate>
+    fun cacheFile(authToken: String, repoID: String, directory: String,
+                  fileName: String): Observable<ItemTemplate>
 }

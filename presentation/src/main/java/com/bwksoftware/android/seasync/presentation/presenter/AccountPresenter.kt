@@ -88,9 +88,13 @@ class AccountPresenter @Inject constructor(
 
     private inner class AccountsObserver(
             val otherItems: List<NavBaseItem>) : DefaultObserver<List<AccountTemplate>>() {
+        override fun onComplete() {
+            Log.d("AccountPresenter","on complete")
+        }
         override fun onError(exception: Throwable) {
+            //TODO delete account if no success
             Log.d("AccountPresenter", "yolo error" + exception.localizedMessage)
-            view.showNavList(listOf(SeafAccount("", "", "None","")) + otherItems)
+            view.showNavList(listOf(SeafAccount("", "", "None", "")) + otherItems)
         }
 
         override fun onNext(accounts: List<AccountTemplate>) {

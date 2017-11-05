@@ -16,8 +16,11 @@
 
 package com.bwksoftware.android.seasync.data.repository
 
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.data.datamanager.StorageManager
+import com.bwksoftware.android.seasync.data.datastore.DataStoreFactory
 import com.bwksoftware.android.seasync.data.entity.EntityDataMapper
+import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.net.RestApiImpl
 import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.domain.AvatarTemplate
@@ -28,34 +31,45 @@ import io.reactivex.Observable
 import javax.inject.Inject
 
 
-class DataRepository @Inject constructor(private val restService: RestApiImpl,
+class DataRepository @Inject constructor(val restService: RestApiImpl,
                                          val storageManager: StorageManager,
+                                         val seafAccountManager: SeafAccountManager,
+                                         val dataStoreFactory: DataStoreFactory,
                                          val entityDataMapper: EntityDataMapper) : Repository {
 
     override fun getDirectoryEntries(authToken: String, repoId: String,
                                      directory: String): Observable<List<ItemTemplate>> {
-
-        return restService.getDirectoryEntries(authToken, repoId, directory).
+        val currAccount = seafAccountManager.getCurrentAccount()
+        val serverAddress = seafAccountManager.getServerAddress(currAccount)
+        return dataStoreFactory.createDirectoryDataStore(
+                currAccount.name,
+                repoId, directory).getDirectoryEntries(currAccount.name, serverAddress!!,
+                authToken, repoId, directory).
                 map { entityDataMapper.transformItemList(it, repoId, directory) }
     }
 
-//    override fun getFileDetail(authToken: String, repoId: String, directory: String,
-//                               filename: String) {
-//        return restService.getFileDetail(authToken,repoId, directory,filename).
-//                map { entityDataMapper.transformItem(it,repoId,directory)}
-//    }
-
 
     override fun getAvatar(username: String, token: String): Observable<AvatarTemplate> {
-        return restService.getAvatar(username, token).map(entityDataMapper::transformAvatar)
+        val currAccount = seafAccountManager.getCurrentAccount()
+        val serverAddress = seafAccountManager.getServerAddress(currAccount)!!
+        return dataStoreFactory.createAvatarDataStore(username).getAvatar(username, serverAddress,
+                token).map(
+                entityDataMapper::transformAvatar)
     }
 
     override fun getRepoList(authToken: String): Observable<List<RepoTemplate>> {
-        return restService.getRepoList(authToken).map(entityDataMapper::transformRepoList)
+        val currAccount = seafAccountManager.getCurrentAccount()
+        val serverAddress = seafAccountManager.getServerAddress(currAccount)!!
+
+        return dataStoreFactory.createRepoDataStore(currAccount.name).getRepoList(currAccount.name,
+                serverAddress, authToken)
+                .map(entityDataMapper::transformRepoList)
     }
 
     override fun getAccountToken(username: String, password: String): Observable<AccountTemplate> {
-        return restService.getAccountToken(username, password).map(
+        val currAccount = seafAccountManager.getAccountByName(username)
+        val serverAddress = seafAccountManager.getServerAddress(currAccount!!)!!
+        return restService.getAccountToken(username, serverAddress, password).map(
                 entityDataMapper::transformAccountToken)
     }
 
@@ -68,11 +82,25 @@ class DataRepository @Inject constructor(private val restService: RestApiImpl,
         }
     }
 
-    override fun unsyncItem(repoId: String, directory: String, name: String): Observable<ItemTemplate> {
+    override fun unsyncItem(repoId: String, directory: String,
+                            name: String): Observable<ItemTemplate> {
         return Observable.fromCallable {
             entityDataMapper.transformItem(storageManager.unsyncItem(repoId, directory, name),
                     repoId, directory)
         }
     }
+
+    override fun cacheFile(authToken: String, repoID: String, directory: String,
+                           fileName: String): Observable<ItemTemplate> {
+
+        return Observable.fromCallable {
+            val item = Item()
+            item.name = fileName
+            item.path = directory
+            entityDataMapper.transformItem(storageManager.getCachedFile(repoID, authToken, item)!!,
+                    repoID, directory)
+        }
+    }
+
 
 }

@@ -23,6 +23,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".view.activity.AccountActivity"
+            android:hardwareAccelerated="true"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -86,6 +87,10 @@
             <intent-filter>
                 <action
                     android:name="com.bwksoftware.android.seasync.data.service.fileobserver.ACTION_START_FILE_OBSERVER" />
+                <action
+                    android:name="com.bwksoftware.android.seasync.data.service.fileobserver.ACTION_RESTART_CACHE_OBSERVER" />
+                <action
+                android:name="com.bwksoftware.android.seasync.data.service.fileobserver.ACTION_RESTART_FILE_OBSERVER" />
             </intent-filter>
         </receiver>
 

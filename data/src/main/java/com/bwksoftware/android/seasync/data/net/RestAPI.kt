@@ -33,52 +33,66 @@ interface RestAPI {
         var API_BASE_URL = "https://cloud.bwk-technik.de/api2/"
     }
 
-    @GET("repos/")
-    fun getRepoList(@Header("Authorization") auth: String): Observable<List<Repo>>
+    @GET
+    fun getRepoList(
+            @Url url: String,
+            @Header("Authorization") auth: String): Observable<List<Repo>>
 
-    @GET("repos/")
-    fun getRepoListSync(@Header("Authorization") auth: String): Call<List<Repo>>
+    @GET
+    fun getRepoListSync(
+            @Url url: String,
+            @Header("Authorization") auth: String): Call<List<Repo>>
 
-    @GET("repos/{repo-id}/dir/")
-    fun getDirectoryEntries(@Path(value = "repo-id") repo_id: String,
-                            @Header("Authorization") auth: String): Observable<List<Item>>
+    @GET
+    fun getDirectoryEntries(
+            @Url url: String,
+            @Header("Authorization") auth: String): Observable<List<Item>>
 
-    @GET("repos/{repo-id}/dir/")
-    fun getDirectoryEntriesSync(@Path(value = "repo-id") repo_id: String,
-                                @Header("Authorization") auth: String): Call<List<Item>>
+    @GET
+    fun getDirectoryEntriesSync(
+            @Url url: String,
+            @Header("Authorization") auth: String): Call<List<Item>>
 
-    @GET("repos/{repo-id}/file/detail/")
-    fun getFileDetail(@Path(value = "repo-id") repo_id: String,
-                      @Query("p") file: String,
-                      @Header("Authorization") auth: String): Call<Item>
+    @GET
+    fun getFileDetail(
+            @Url url: String,
+            @Query("p") file: String,
+            @Header("Authorization") auth: String): Call<Item>
 
-    @GET("repos/{repo-id}/dir/")
-    fun getDirectoryEntries(@Path(value = "repo-id") repo_id: String,
-                            @Header("Authorization") auth: String,
-                            @Query("p") directory: String): Observable<List<Item>>
+    @GET
+    fun getDirectoryEntries(
+            @Url url: String,
+            @Header("Authorization") auth: String,
+            @Query("p") directory: String): Observable<List<Item>>
 
-    @GET("repos/{repo-id}/dir/")
-    fun getDirectoryEntriesSync(@Path(value = "repo-id") repo_id: String,
-                                @Header("Authorization") auth: String,
-                                @Query("p") directory: String): Call<List<Item>>
+    @GET
+    fun getDirectoryEntriesSync(
+            @Url url: String,
+            @Header("Authorization") auth: String,
+            @Query("p") directory: String): Call<List<Item>>
 
 
-    @POST("auth-token/")
-    fun postAccountToken(@Body credentials: RequestBody): Observable<Account>
+    @POST
+    fun postAccountToken(
+            @Url url: String,
+            @Body credentials: RequestBody): Observable<Account>
 
-    @GET("avatars/user/{username}/resized/128/")
-    fun getAvatar(@Path(value = "username", encoded = true) username: String,
-                  @Header("Authorization") auth: String): Observable<Avatar>
+    @GET
+    fun getAvatar(
+            @Url url: String,
+            @Header("Authorization") auth: String): Observable<Avatar>
 
-    @GET("repos/{repo-id}/update-link/")
-    fun getUpdateLink(@Path(value = "repo-id") repo_id: String,
-                      @Header("Authorization") auth: String,
-                      @Query("p") directory: String): Call<String>
+    @GET
+    fun getUpdateLink(
+            @Url url: String,
+            @Header("Authorization") auth: String,
+            @Query("p") directory: String): Call<String>
 
-    @GET("repos/{repo-id}/upload-link/")
-    fun getUploadLink(@Path(value = "repo-id") repo_id: String,
-                      @Header("Authorization") auth: String,
-                      @Query("p") directory: String): Call<String>
+    @GET
+    fun getUploadLink(
+            @Url url: String,
+            @Header("Authorization") auth: String,
+            @Query("p") directory: String): Call<String>
 
     @Multipart
     @POST
@@ -97,9 +111,9 @@ interface RestAPI {
                    @Part file: MultipartBody.Part
     ): Call<String>
 
-    @GET("repos/{repo-id}/file/")
-    fun getFileDownloadLink(@Header("Authorization") auth: String,
-                            @Path(value = "repo-id") repo_id: String,
+    @GET
+    fun getFileDownloadLink(@Url url: String,
+                            @Header("Authorization") auth: String,
                             @Query("p") directory: String): Call<String>
 
     @GET

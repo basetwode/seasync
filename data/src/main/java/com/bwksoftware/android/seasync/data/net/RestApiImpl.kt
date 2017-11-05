@@ -37,9 +37,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 
-/**
- * Created by ansel on 10/10/2017.
- */
 @Singleton
 class RestApiImpl @Inject constructor(val context: Context) {
     private val service: RestAPI
@@ -50,7 +47,7 @@ class RestApiImpl @Inject constructor(val context: Context) {
         logging.setLevel(HttpLoggingInterceptor.Level.BODY)
         val builder = OkHttpClient.Builder()
 //                .addInterceptor(logging)
-        val retro = Retrofit.Builder().baseUrl(RestAPI.API_BASE_URL)
+        val retro = Retrofit.Builder().baseUrl("https://cloud.bwk-technik.de")
                 .addConverterFactory(
                         GsonConverterFactory.create(GsonBuilder().setLenient().create()))
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
@@ -58,45 +55,55 @@ class RestApiImpl @Inject constructor(val context: Context) {
         service = retro.create(RestAPI::class.java)
     }
 
-    fun getAccountToken(username: String, password: String): Observable<Account> {
+    fun getAccountToken(username: String, serverAddress: String,
+                        password: String): Observable<Account> {
         val requestBody = RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"),
                 "username=$username&password=$password")
-        return service.postAccountToken(requestBody)
+        return service.postAccountToken(parseUrl(serverAddress, "auth-token/"), requestBody)
     }
 
-    fun getRepoList(authToken: String): Observable<List<Repo>> {
-        return service.getRepoList("Token " + authToken)
+    fun getRepoList(authToken: String, serverAddress: String): Observable<List<Repo>> {
+        return service.getRepoList(parseUrl(serverAddress, "repos/"), "Token " + authToken)
     }
 
-    fun getRepoListSync(authToken: String): Call<List<Repo>> {
-        return service.getRepoListSync("Token " + authToken)
+    fun getRepoListSync(authToken: String, serverAddress: String): Call<List<Repo>> {
+        return service.getRepoListSync(parseUrl(serverAddress, "repos/"), "Token " + authToken)
     }
 
-    fun getAvatar(username: String, authToken: String): Observable<Avatar> {
-        return service.getAvatar(username, "Token " + authToken)
+    fun getAvatar(username: String, serverAddress: String, authToken: String): Observable<Avatar> {
+        return service.getAvatar(parseUrl(serverAddress, "avatars/user/$username/resized/128/"),
+                "Token " + authToken)
     }
 
-    fun getDirectoryEntries(authToken: String, repoID: String,
+    fun getDirectoryEntries(authToken: String, serverAddress: String, repoID: String,
                             directory: String): Observable<List<Item>> {
         if (directory.isEmpty())
-            return service.getDirectoryEntries(repoID, "Token " + authToken)
-        return service.getDirectoryEntries(repoID, "Token " + authToken, directory)
+            return service.getDirectoryEntries(parseUrl(serverAddress, "repos/$repoID/dir/"),
+                    "Token " + authToken)
+        return service.getDirectoryEntries(parseUrl(serverAddress, "repos/$repoID/dir/"),
+                "Token " + authToken, directory)
     }
 
-    fun getDirectoryEntriesSync(authToken: String, repoID: String,
+    fun getDirectoryEntriesSync(authToken: String, serverAddress: String, repoID: String,
                                 directory: String): Call<List<Item>> {
         Log.d("FileSyncService", repoID)
         if (directory.isEmpty())
-            return service.getDirectoryEntriesSync(repoID, "Token " + authToken)
-        return service.getDirectoryEntriesSync(repoID, "Token " + authToken, directory)
+            return service.getDirectoryEntriesSync(parseUrl(serverAddress, "repos/$repoID/dir/"),
+                    "Token " + authToken)
+        return service.getDirectoryEntriesSync(parseUrl(serverAddress, "repos/$repoID/dir/"),
+                "Token " + authToken, directory)
     }
 
-    fun getUpdateLink(authToken: String, repoID: String, directory: String): Call<String> {
-        return service.getUpdateLink(repoID, "Token " + authToken, directory)
+    fun getUpdateLink(authToken: String, serverAddress: String, repoID: String,
+                      directory: String): Call<String> {
+        return service.getUpdateLink(parseUrl(serverAddress, "repos/$repoID/update-link/"),
+                "Token " + authToken, directory)
     }
 
-    fun getUploadLink(authToken: String, repoID: String, directory: String): Call<String> {
-        return service.getUploadLink(repoID, "Token " + authToken, directory)
+    fun getUploadLink(authToken: String, serverAddress: String, repoID: String,
+                      directory: String): Call<String> {
+        return service.getUploadLink(parseUrl(serverAddress, "repos/$repoID/update-link/"),
+                "Token " + authToken, directory)
     }
 
     fun uploadFile(url: String, authToken: String, parentDir: String, relativeDir: String,
@@ -130,16 +137,24 @@ class RestApiImpl @Inject constructor(val context: Context) {
                 bodyParts.part(0), bodyParts.part(1))
     }
 
-    fun getFileDownloadLink(authToken: String, repoID: String, directory: String): Call<String> {
-        return service.getFileDownloadLink("Token " + authToken, repoID, directory)
+    fun getFileDownloadLink( authToken: String,serverAddress: String, repoID: String,
+                            directory: String): Call<String> {
+        return service.getFileDownloadLink(parseUrl(serverAddress,
+                "repos/$repoID/file/"), "Token " + authToken, directory)
     }
 
     fun downloadFile(url: String): Call<ResponseBody> {
         return service.downloadFile(url)
     }
 
-    fun getFileDetail(authToken: String, repoID: String, directory: String,
+    fun getFileDetail(authToken: String, serverAddress: String, repoID: String, directory: String,
                       filename: String): Call<Item> {
-        return service.getFileDetail(repoID, directory + filename, "Token " + authToken)
+        return service.getFileDetail(parseUrl(serverAddress, "repos/$repoID/file/detail/"),
+                directory + filename, "Token " + authToken)
     }
+
+    fun parseUrl(serverAddress: String, path: String): String {
+        return "https://$serverAddress/api2/$path"
+    }
+
 }

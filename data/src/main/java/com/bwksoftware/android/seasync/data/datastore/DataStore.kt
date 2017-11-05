@@ -15,13 +15,19 @@
  */
 package com.bwksoftware.android.seasync.data.datastore
 
-import com.bwksoftware.android.seasync.domain.ItemTemplate
-import com.bwksoftware.android.seasync.domain.RepoTemplate
+import com.bwksoftware.android.seasync.data.entity.Avatar
+import com.bwksoftware.android.seasync.data.entity.Item
+import com.bwksoftware.android.seasync.data.entity.Repo
 import io.reactivex.Observable
 
 
 interface DataStore {
-    fun getRepoList(authToken: String): Observable<List<RepoTemplate>>
-    fun getDirectoryEntries(authToken: String, repoId: String,
-                            directory: String): Observable<List<ItemTemplate>>
+    fun getRepoList(account: String, serverAddress: String,
+                    authToken: String): Observable<List<Repo>>
+
+    fun getDirectoryEntries(account: String, serverAddress: String, authToken: String,
+                            repoId: String,
+                            directory: String): Observable<List<Item>>
+
+    fun getAvatar(username: String, serverAddress: String, authToken: String): Observable<Avatar>
 }

@@ -3,36 +3,37 @@ package com.bwksoftware.android.seasync.data.datamanager
 import android.accounts.Account
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.provider.BaseColumns
 import android.util.Log
 import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.cache.DiskCache
 import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
 import com.bwksoftware.android.seasync.data.net.RestApiImpl
 import com.bwksoftware.android.seasync.data.provider.FileRepoContract
 import com.bwksoftware.android.seasync.data.provider.FileRepoContract.Companion.CONTENT_URI
+import com.bwksoftware.android.seasync.data.service.OnBootReceiver
 import com.bwksoftware.android.seasync.data.sync.SyncManager
 import java.io.File
 import javax.inject.Inject
 
 
 class StorageManager @Inject constructor(val context: Context,
-                                         val seafAccountManager: SeafAccountManager?,
+                                         val seafAccountManager: SeafAccountManager
+                                         ,
                                          val restApi: RestApiImpl) {
 
     init {
-        if (seafAccountManager != null)
-            setAccount(seafAccountManager.getCurrentAccount())
+
     }
 
     var contentProviderClient = context.contentResolver.acquireContentProviderClient(CONTENT_URI)
 
-    lateinit var currAccount: Account
+    fun currAccount(): Account = seafAccountManager.getCurrentAccount()
+    val cache = DiskCache(context)
 
-    fun setAccount(account: Account) {
-        currAccount = account
-    }
 
     fun createItemInstance(cursor: Cursor): Item {
         val item = Item()
@@ -46,12 +47,15 @@ class StorageManager @Inject constructor(val context: Context,
         item.type = cursor.getString(cursor.getColumnIndex(FileRepoContract.FileColumns.TYPE))
         item.id = cursor.getString(cursor.getColumnIndex(FileRepoContract.FileColumns.REMOTE_ID))
         item.storage = cursor.getString(cursor.getColumnIndex(FileRepoContract.FileColumns.STORAGE))
+        item.isRootSync = cursor.getInt(
+                cursor.getColumnIndex(FileRepoContract.FileColumns.ROOT_SYNC)) == 1
         item.synced = cursor.getInt(cursor.getColumnIndex(FileRepoContract.FileColumns.SYNCED)) == 1
         return item
     }
 
 
     fun saveItemInstance(item: Item) {
+        updateCache(item)
         val contentValues = ContentValues()
         contentValues.put(FileRepoContract.FileColumns.NAME, item.name)
         contentValues.put(FileRepoContract.FileColumns.SIZE, item.size)
@@ -61,8 +65,9 @@ class StorageManager @Inject constructor(val context: Context,
         contentValues.put(FileRepoContract.FileColumns.TYPE, item.type)
         contentValues.put(FileRepoContract.FileColumns.REMOTE_ID, item.id)
         contentValues.put(FileRepoContract.FileColumns.SYNCED, item.synced)
+        contentValues.put(FileRepoContract.FileColumns.ROOT_SYNC, item.isRootSync)
         contentValues.put(FileRepoContract.FileColumns.STORAGE, item.storage)
-        contentValues.put(FileRepoContract.FileColumns.ACCOUNT, currAccount.name)
+        contentValues.put(FileRepoContract.FileColumns.ACCOUNT, currAccount().name)
 
 
         if (item.dbId != null) {
@@ -75,6 +80,28 @@ class StorageManager @Inject constructor(val context: Context,
             val id = resultUri.pathSegments[1]
             item.dbId = id.toLong()
         }
+    }
+
+    fun updateCache(item: Item) {
+        var name = currAccount().name
+        if (name == "None")
+            name = seafAccountManager?.getCurrentAccount()?.name
+        val repo = getRepo(BaseColumns._ID, item.repoId.toString())
+        val cachedItems: List<Item> = cache.readDirectoryList(name, repo!!.id!!,
+                item.path!!.removeSuffix("/"))
+        var newItem: Item? = null
+        cachedItems
+                .filter { it.name == item.name }
+                .forEach {
+                    it.isRootSync = item.isRootSync
+                    it.synced = item.synced
+                    it.path = item.path
+                    it.storage = item.storage
+                    newItem = it
+                }
+        cache.writeDirectoryList(currAccount().name, repo.id!!, newItem!!.path!!.removeSuffix("/"),
+                cachedItems,
+                false)
     }
 
     fun syncItem(authToken: String, repo: Repo, localItem: Item?, remoteItem: Item): Boolean {
@@ -96,7 +123,9 @@ class StorageManager @Inject constructor(val context: Context,
 
     fun downloadAndUpdateItem(authToken: String, repo: Repo, localItem: Item,
                               remoteItem: Item): Boolean {
-        val call = restApi.getFileDownloadLink(authToken, repo.id!!,
+        val currAccount = seafAccountManager.getCurrentAccount()
+        val serverAddress = seafAccountManager.getServerAddress(currAccount)!!
+        val call = restApi.getFileDownloadLink(authToken, serverAddress, repo.id!!,
                 localItem.path + "/" + localItem.name)
         val response = call.execute()
         if (response.isSuccessful) {
@@ -137,12 +166,14 @@ class StorageManager @Inject constructor(val context: Context,
     }
 
     fun createFilePath(repo: Repo, item: Item): String {
-        return """${item.storage}/${currAccount.name}/${repo.name}/${item.path}"""
+        return """${item.storage}/${currAccount().name}/${repo.name}/${item.path}"""
     }
 
     fun uploadAndUpdateItem(authToken: String, repo: Repo, localItem: Item,
                             remoteItem: Item): Boolean {
-        val call = restApi.getUpdateLink(authToken, repo.id!!, remoteItem.path!!)
+        val currAccount = seafAccountManager.getCurrentAccount()
+        val serverAddress = seafAccountManager.getServerAddress(currAccount)!!
+        val call = restApi.getUpdateLink(authToken, serverAddress, repo.id!!, remoteItem.path!!)
 
         val response = call.execute()
         if (response.isSuccessful) {
@@ -155,7 +186,8 @@ class StorageManager @Inject constructor(val context: Context,
                     file)
             val responseUpload = uploadCall.execute()
 
-            val detailCall = restApi.getFileDetail(authToken, repo.id!!, localItem.path!!,
+            val detailCall = restApi.getFileDetail(authToken, serverAddress, repo.id!!,
+                    localItem.path!!,
                     localItem.name!!)
             val itemDetails = detailCall.execute().body() ?: return false
 
@@ -184,8 +216,9 @@ class StorageManager @Inject constructor(val context: Context,
     fun getItemsForRepo(repo: Repo): Map<String, Item> {
         val cursor = contentProviderClient.query(FileRepoContract.File.CONTENT_URI,
                 null,
-                FileRepoContract.FileColumns.REPO_ID + "=?",
-                arrayOf(repo.dbId.toString()),
+                FileRepoContract.FileColumns.REPO_ID + "=? AND " +
+                        FileRepoContract.FileColumns.ACCOUNT + "=?",
+                arrayOf(repo.dbId.toString(), currAccount().name),
                 null)
         val items = HashMap<String, Item>()
         while (cursor.moveToNext()) {
@@ -200,8 +233,9 @@ class StorageManager @Inject constructor(val context: Context,
         val cursor = contentProviderClient.query(FileRepoContract.File.CONTENT_URI,
                 null,
                 FileRepoContract.FileColumns.REPO_ID + "=? AND " +
-                        FileRepoContract.FileColumns.PATH + "=?",
-                arrayOf(repo.dbId.toString(), path),
+                        FileRepoContract.FileColumns.PATH + "=? AND " +
+                        FileRepoContract.FileColumns.ACCOUNT + "=?",
+                arrayOf(repo.dbId.toString(), path, currAccount().name),
                 null)
         val items = HashMap<String, Item>()
         while (cursor.moveToNext()) {
@@ -215,8 +249,9 @@ class StorageManager @Inject constructor(val context: Context,
     fun getRepo(key: String, value: String): Repo? {
         val cursor = contentProviderClient.query(FileRepoContract.Repo.CONTENT_URI,
                 null,
-                "$key=?",
-                arrayOf(value),
+                "$key=? AND " +
+                        FileRepoContract.RepoColumns.ACCOUNT + "=?",
+                arrayOf(value, currAccount().name),
                 null)
         var localRepo: Repo? = null
         if (cursor.moveToFirst())
@@ -228,8 +263,9 @@ class StorageManager @Inject constructor(val context: Context,
     fun getRepo(repoHash: String): Repo? {
         val cursor = contentProviderClient.query(FileRepoContract.Repo.CONTENT_URI,
                 null,
-                FileRepoContract.RepoColumns.REPO_ID + "=?",
-                arrayOf(repoHash),
+                FileRepoContract.RepoColumns.REPO_ID + "=? AND " +
+                        FileRepoContract.RepoColumns.ACCOUNT + "=?",
+                arrayOf(repoHash, currAccount().name),
                 null)
         var localRepo: Repo? = null
         if (cursor.moveToFirst())
@@ -249,6 +285,8 @@ class StorageManager @Inject constructor(val context: Context,
         contentValues.put(FileRepoContract.RepoColumns.FULL_SYNCED, repo.synced)
         contentValues.put(FileRepoContract.RepoColumns.REPO_ID, repo.id)
         contentValues.put(FileRepoContract.RepoColumns.STORAGE, repo.storage)
+        contentValues.put(FileRepoContract.RepoColumns.ACCOUNT, currAccount().name)
+
         if (repo.dbId != null) {
             val resultUri = contentProviderClient.update(FileRepoContract.Repo.buildRepoUri(
                     repo.dbId!!),
@@ -282,8 +320,9 @@ class StorageManager @Inject constructor(val context: Context,
                 null,
                 FileRepoContract.FileColumns.REPO_ID + "=? AND " +
                         FileRepoContract.FileColumns.PATH + "=? AND " +
-                        FileRepoContract.FileColumns.NAME + "=?",
-                arrayOf(repoId, filePath, fileName),
+                        FileRepoContract.FileColumns.NAME + "=? AND " +
+                        FileRepoContract.FileColumns.ACCOUNT + "=?",
+                arrayOf(repoId, filePath, fileName, currAccount().name),
                 null
         )
         var item: Item? = null
@@ -291,6 +330,36 @@ class StorageManager @Inject constructor(val context: Context,
             item = createItemInstance(cursor)
         cursor.close()
         return item
+    }
+
+    fun getCachedFile(repoHash: String, authToken: String, item: Item): Item? {
+        val cacheDir = context.cacheDir.absolutePath
+        val repo = Repo()
+        repo.id = repoHash
+        repo.name = repoHash
+        item.storage = cacheDir
+        val downloadSuccessful = (downloadAndUpdateItem(authToken, repo, item, item))
+
+        if (downloadSuccessful) {
+            //Update local cache
+            val cachedItems: List<Item> = cache.readDirectoryList(currAccount().name, repoHash,
+                    item.path!!)
+            var newItem: Item? = null
+            cachedItems
+                    .filter { it.name == item.name }
+                    .forEach {
+                        it.isCached = true
+                        it.path = item.path
+                        it.storage = cacheDir
+                        newItem = it
+                    }
+            cache.writeDirectoryList(currAccount().name, repoHash, newItem!!.path!!, cachedItems,
+                    false)
+            val restartObserverIntent = Intent(OnBootReceiver.ACTION_RESTART_CACHE_OBSERVER)
+            context.sendBroadcast(restartObserverIntent)
+            return newItem
+        }
+        return null
     }
 
     fun getFile(repo: Repo, item: Item): Item? {
@@ -321,17 +390,20 @@ class StorageManager @Inject constructor(val context: Context,
                 deleteItemRecursive(item, repo)
             deleteItem(repo, item)
         }
+        cache.writeDirectoryList(currAccount().name, repo.id!!,
+                (parent.path!! + parent.name).removeSuffix("/"), items.values.toList(), false)
         deleteItem(repo, parent)
     }
 
     fun deleteItem(repo: Repo, item: Item) {
         val correspondingFile = File(createFilePath(repo, item), item.name)
+        item.synced = false
         correspondingFile.delete()
         contentProviderClient.delete(FileRepoContract.File.buildFileUri(item.dbId!!),
                 null, null)
     }
 
-    fun unsyncItem(repoId: String, path: String, name: String) :Item{
+    fun unsyncItem(repoId: String, path: String, name: String): Item {
         val repo = getRepo(repoId)
         val item = getFile(repo!!.dbId.toString(), path + "/", name)
         deleteItemRecursive(item!!, repo)
@@ -345,7 +417,9 @@ class StorageManager @Inject constructor(val context: Context,
 
         var localRepo = getRepo(repoHash)
         if (localRepo == null) {
-            restApi.getRepoListSync(authToken).execute().body()!!
+            val currAccount = seafAccountManager.getCurrentAccount()
+            val serverAddress = seafAccountManager.getServerAddress(currAccount)!!
+            restApi.getRepoListSync(authToken, serverAddress).execute().body()!!
                     .filter { it.id == repoHash }
                     .forEach { localRepo = it }
 
@@ -360,6 +434,7 @@ class StorageManager @Inject constructor(val context: Context,
         itemToSync.path = path + "/"
         itemToSync.type = type
         itemToSync.repoId = localRepo!!.dbId
+        itemToSync.isRootSync = true
         itemToSync.synced = true
         itemToSync.storage = storage
         saveItemInstance(itemToSync)
@@ -374,8 +449,23 @@ class StorageManager @Inject constructor(val context: Context,
         val nameParent = pathWithoutTrailingSlash.substringAfterLast("/")
         val parent = getFile(repo.dbId.toString(), pathParent + "/", nameParent)
         deleteItem(repo, item)
+        item.synced = false
+        val childs = getItemsForRepo(repo, pathParent + "/")
+        if (parent != null)
+            cache.writeDirectoryList(currAccount().name, repo.id!!,
+                    (parent.path!! + parent.name).removeSuffix("/"),
+                    childs.values.toList(), false)
+        else {
+            val dirList = cache.readDirectoryList(currAccount().name, repo.id!!, "")
+            dirList.filter { it.name == item.name }.forEach {
+                it.synced = false
+                it.storage = ""
+                it.isRootSync = false
+            }
 
-        val childs = getItemsForRepo(repo, pathParent)
+            cache.writeDirectoryList(currAccount().name, repo.id!!, "/",
+                    dirList, false)
+        }
         if (childs.isNotEmpty())
             return
         if (pathParent.isNotEmpty())

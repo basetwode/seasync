@@ -22,4 +22,5 @@ import com.bwksoftware.android.seasync.presentation.model.Item
 interface DirectoryView : LoadDataView {
     fun renderDirectoryEntries(entries: List<Item>)
     fun updateItem(position: Int, item: Item)
+    fun fileDownloadComplete(item: Item)
 }

@@ -19,10 +19,7 @@ package com.bwksoftware.android.seasync.presentation.presenter
 import android.util.Log
 import com.bwksoftware.android.seasync.data.authentication.Authenticator
 import com.bwksoftware.android.seasync.domain.ItemTemplate
-import com.bwksoftware.android.seasync.domain.interactor.CreateSync
-import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
-import com.bwksoftware.android.seasync.domain.interactor.DeleteSync
-import com.bwksoftware.android.seasync.domain.interactor.GetDirectoryEntries
+import com.bwksoftware.android.seasync.domain.interactor.*
 import com.bwksoftware.android.seasync.presentation.mapper.ModelMapper
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.view.views.DirectoryView
@@ -32,6 +29,7 @@ import javax.inject.Inject
 class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirectoryEntries,
                                              val createSync: CreateSync,
                                              val deleteSync: DeleteSync,
+                                             val cacheFile: CacheFile,
                                              val modelMapper: ModelMapper) {
 
     internal lateinit var directoryView: DirectoryView
@@ -45,8 +43,15 @@ class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirecto
                 DirectoryObserver(), GetDirectoryEntries.Params(authToken, repoId, directory))
     }
 
+    fun fileClicked(position: Int, accountName: String, repoId: String, item: Item,
+                    directory: String) {
+        val authToken = authenticator.getCurrentUserAuthToken(accountName, directoryView.activity())
+        cacheFile.execute(CacheFileObserver(position),
+                CacheFile.Params(authToken, repoId, directory, item.name!!))
+    }
+
     fun directoryLongClicked(position: Int, accountName: String, repoId: String, item: Item,
-                             directory: String,storage:String,
+                             directory: String, storage: String,
                              isSynced: Boolean) {
         if (isSynced)
             deleteSync.execute(CreateDeleteSyncObserver(position),
@@ -61,7 +66,7 @@ class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirecto
     }
 
     fun fileLongClicked(position: Int, accountName: String, repoId: String, item: Item,
-                        directory: String,storage:String,
+                        directory: String, storage: String,
                         isSynced: Boolean) {
         if (isSynced)
             deleteSync.execute(CreateDeleteSyncObserver(position),
@@ -83,6 +88,25 @@ class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirecto
         }
     }
 
+    private inner class CacheFileObserver(val position: Int) : DefaultObserver<ItemTemplate>() {
+
+        override fun onComplete() {
+            Log.d("AccountPresenter", "yolo complete")
+        }
+
+        override fun onError(exception: Throwable) {
+            directoryView.showNoInternet()
+            Log.d("AccountPresenter", "yolo error" + exception.localizedMessage)
+        }
+
+        override fun onNext(cachedItem: ItemTemplate) {
+            val item = modelMapper.transformItem(cachedItem)
+            directoryView.updateItem(position, item)
+            directoryView.fileDownloadComplete(item)
+            Log.d("DirectoryPresenter", "File download successful")
+        }
+    }
+
     private inner class DirectoryObserver : DefaultObserver<List<ItemTemplate>>() {
 
         override fun onComplete() {
@@ -90,6 +114,7 @@ class DirectoryPresenter @Inject constructor(val getDirectoryEntries: GetDirecto
         }
 
         override fun onError(exception: Throwable) {
+            directoryView.showNoInternet()
             Log.d("AccountPresenter", "yolo error" + exception.localizedMessage)
         }
 

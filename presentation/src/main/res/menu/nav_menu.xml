@@ -6,8 +6,11 @@
             android:icon="@drawable/list"
             android:title="All repositories" />
 
-
         <item
+            android:id="@+id/sync"
+            android:icon="@drawable/sync"
+            android:title="Sync now" /></group>
+    <group><item
             android:id="@+id/uploads"
             android:icon="@drawable/upload"
             android:title="Uploads" />

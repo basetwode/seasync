@@ -17,11 +17,11 @@ class FileObserverService : Service() {
 
     val binder = MonitorBinder()
 
-    lateinit var filesObserver: LinkedList<RecursiveFileObserver>
+    lateinit var filesObservers: LinkedList<RecursiveFileObserver>
 
-    lateinit var cacheObserver: RecursiveFileObserver
+    lateinit var cacheObservers: LinkedList<RecursiveFileObserver>
 
-    var isRunning :Boolean =false
+    var isRunning: Boolean = false
 
 
     override fun onBind(intent: Intent?): IBinder {
@@ -31,21 +31,48 @@ class FileObserverService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("FileObserverService", "on start command")
-
-        if (isRunning)
-            for(observer in filesObserver) {
-                observer.stopWatching()
-                observer.startWatching()
+        if (intent?.action == OnBootReceiver.ACTION_RESTART_CACHE_OBSERVER) {
+            if (isRunning)
+                for (observer in cacheObservers) {
+                    observer.stopWatching()
+                    observer.startWatching()
+                }
+        } else if (intent?.action == OnBootReceiver.ACTION_RESTART_FILE_OBSERVER) {
+            if (isRunning) {
+                for (observer in filesObservers) {
+                    observer.stopWatching()
+                    observer.startWatching()
+                }
             }
-        else {
+//        } else if (isRunning) {
+//            for (observer in filesObservers) {
+//                observer.stopWatching()
+//                observer.startWatching()
+//            }
+//            for (observer in cacheObservers) {
+//                observer.stopWatching()
+//                observer.startWatching()
+//            }
+        } else {
             val accountMgr = AccountManager.get(baseContext)
             val restApi = RestApiImpl(baseContext)
-            filesObserver = LinkedList()
+            filesObservers = LinkedList()
+            cacheObservers = LinkedList()
             for (account in accountMgr.getAccountsByType(getString(R.string.authtype))) {
                 val accountFileObserver = RecursiveFileObserver(restApi, account, baseContext,
-                        File(baseContext.filesDir, account.name).absolutePath)
-                filesObserver.add(accountFileObserver)
+                        File(baseContext.filesDir, account.name).absolutePath, false)
+                val accountFileObserver2 = RecursiveFileObserver(restApi, account, baseContext,
+                        File(baseContext.getExternalFilesDir(null), account.name).absolutePath,
+                        false)
+                val cacheObserver = RecursiveFileObserver(restApi, account, baseContext,
+                        File(baseContext.cacheDir, account.name).absolutePath, true)
+                cacheObservers.add(cacheObserver)
+                filesObservers.add(accountFileObserver)
+                filesObservers.add(accountFileObserver2)
+
                 accountFileObserver.startWatching()
+                accountFileObserver2.startWatching()
+                cacheObserver.startWatching()
             }
 //        cacheObserver = RecursiveFileObserver(baseContext.cacheDir.absolutePath)
 //        cacheObserver.startWatching()

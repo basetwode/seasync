@@ -10,6 +10,8 @@ class OnBootReceiver : BroadcastReceiver() {
 
     companion object {
         val ACTION_START_FILE_OBSERVER = "com.bwksoftware.android.seasync.data.service.fileobserver.ACTION_START_FILE_OBSERVER"
+        val ACTION_RESTART_CACHE_OBSERVER = "com.bwksoftware.android.seasync.data.service.fileobserver.ACTION_RESTART_CACHE_OBSERVER"
+        val ACTION_RESTART_FILE_OBSERVER = "com.bwksoftware.android.seasync.data.service.fileobserver.ACTION_RESTART_FILE_OBSERVER"
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {

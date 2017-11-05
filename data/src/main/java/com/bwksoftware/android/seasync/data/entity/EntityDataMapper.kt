@@ -32,7 +32,7 @@ class EntityDataMapper @Inject constructor(val storageManager: StorageManager) {
     }
 
     fun transformAvatar(avatar: Avatar): AvatarTemplate {
-        return AvatarTemplate(avatar.url!!)
+        return AvatarTemplate(avatar.url!!.replace("http://", "https://"))
     }
 
     fun transformRepo(repo: Repo): RepoTemplate {
@@ -45,16 +45,14 @@ class EntityDataMapper @Inject constructor(val storageManager: StorageManager) {
     }
 
     fun transformItemList(itemList: List<Item>, repoId: String, path: String): List<ItemTemplate> {
-        return itemList.mapTo(ArrayList()) { transformItem(it, repoId,path) }
+        return itemList.mapTo(ArrayList()) { transformItem(it, repoId, path) }
     }
 
     fun transformItem(item: Item, repoId: String, path: String): ItemTemplate {
-        val repo = storageManager.getRepo(repoId)
-        var localItem: Item? = null
-        if(repo!=null)
-            localItem = storageManager.getFile(repo.dbId!!.toString(), path+"/", item.name!!)
-        //TODO: find a way to correctly retrieve the local file (we need the repo id and the path for that)
+
+        //TODO: fix for cached files since they have props too
         return ItemTemplate(item.id, item.type, item.name, item.mtime, item.size,
-                localItem?.storage?:"", localItem?.synced ?: false)
+                item.storage ?: "", item.synced ?: false, item.isCached,
+                item.isRootSync ?: false)
     }
 }

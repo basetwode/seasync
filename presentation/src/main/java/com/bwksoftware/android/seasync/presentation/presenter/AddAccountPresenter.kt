@@ -35,6 +35,8 @@ class AddAccountPresenter @Inject constructor(private val getAccountToken: GetAc
     @Inject lateinit var authenticator: Authenticator
 
     fun createNewAccount(username: String, password: String, serverAddress: String) {
+        seafAccountManager.createAccount(username, password, serverAddress,
+                "")
         this.getAccountToken.execute(AccountTokenObserver(username, password, serverAddress),
                 GetAccountToken.Params(username, password))
     }

@@ -17,10 +17,22 @@
 package com.bwksoftware.android.seasync.presentation.view.views
 
 import android.app.Activity
+import android.support.design.widget.CoordinatorLayout
+import android.support.design.widget.Snackbar
+import com.bwksoftware.android.seasync.presentation.R
 
 /**
  * Created by ansel on 10/11/2017.
  */
 interface LoadDataView {
     fun activity(): Activity
+    fun showNoInternet() {
+        if (activity() != null) {
+            val snackbar = Snackbar.make(
+                    activity().findViewById<CoordinatorLayout>(R.id.coordinator),
+                    R.string.error_no_internet,
+                    Snackbar.LENGTH_LONG)
+            snackbar.show()
+        }
+    }
 }

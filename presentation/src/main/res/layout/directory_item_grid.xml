@@ -35,7 +35,7 @@
                 android:layout_height="15dp"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
-                android:layout_margin="1dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/synced"
                 android:visibility="gone" />
             <TextView

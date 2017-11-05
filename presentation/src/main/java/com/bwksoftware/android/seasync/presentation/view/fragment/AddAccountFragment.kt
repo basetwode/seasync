@@ -17,11 +17,13 @@
 package com.bwksoftware.android.seasync.presentation.view.fragment
 
 import android.accounts.Account
+import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.TextInputEditText
 import android.support.v7.widget.AppCompatButton
 import android.view.View
 import android.widget.Toast
+import com.bwksoftware.android.seasync.data.service.OnBootReceiver
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.mapper.AccountModelMapper
 import com.bwksoftware.android.seasync.presentation.presenter.AddAccountPresenter
@@ -31,6 +33,7 @@ import com.bwksoftware.android.seasync.presentation.model.Account as SeafAccount
 
 
 class AddAccountFragment : BaseFragment(), AddAccountView {
+
 
     interface OnAddAccountListener {
         fun onAccountComplete(account: SeafAccount)
@@ -90,7 +93,10 @@ class AddAccountFragment : BaseFragment(), AddAccountView {
         when (attachedActivity) {
             is OnAddAccountListener -> attachedActivity.onAccountComplete(
                     accountModelMapper.transformAccount(account))
+
         }
+        val restartObserverIntent = Intent(OnBootReceiver.ACTION_RESTART_CACHE_OBSERVER)
+        context.sendBroadcast(restartObserverIntent)
     }
 
     override fun onCreateUnsuccessful() {

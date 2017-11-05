@@ -3,14 +3,13 @@ package com.bwksoftware.android.seasync.data.service
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.app.NotificationManager
-import android.content.AbstractThreadedSyncAdapter
-import android.content.ContentProviderClient
-import android.content.Context
-import android.content.SyncResult
+import android.content.*
 import android.os.Bundle
 import android.support.v4.app.NotificationCompat
 import android.util.Log
 import com.bwksoftware.android.seasync.data.R
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
+import com.bwksoftware.android.seasync.data.cache.DiskCache
 import com.bwksoftware.android.seasync.data.datamanager.StorageManager
 import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
@@ -29,6 +28,8 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
 
     lateinit var storageManager: StorageManager
 
+    var cache = DiskCache(mContext)
+
 
     private val accountManager = AccountManager.get(mContext)
 
@@ -44,24 +45,27 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
     override fun onPerformSync(p0: Account?, p1: Bundle?, p2: String?, p3: ContentProviderClient?,
                                p4: SyncResult?) {
         Log.d("FileSyncService", "onPerformSync")
-        storageManager = StorageManager(mContext, null, restApi)
-        storageManager.setAccount(p0!!)
+        storageManager = StorageManager(context, SeafAccountManager(context,
+                SharedPrefsController(context)), restApi)
+
         storageManager.contentProviderClient = p3!!
+        val serverAddress =AccountManager.get(context).getUserData(p0, "Server")
         val authToken = accountManager.blockingGetAuthToken(p0, "full_access",
                 true)
 
         // retrieve list of repos and compare their modified time to local repos from db
-        val repos = restApi.getRepoListSync(authToken).execute().body()
+        val repos = restApi.getRepoListSync(authToken,serverAddress).execute().body()
         printFilesRecursive(mContext.filesDir)
         if (repos == null)
             return
-        val notificationMgr = mContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notificationBuilder=  NotificationCompat.Builder(context)
-        notificationBuilder.setContentTitle("Synchronizing ${p0.name}")
+        val notificationMgr = mContext.getSystemService(
+                Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationBuilder = NotificationCompat.Builder(context)
+        notificationBuilder.setContentTitle("Synchronizing ${p0!!.name}")
         notificationBuilder.setContentText("Synchronization in progress")
         notificationBuilder.setSmallIcon(R.drawable.ic_launcher_round)
         notificationBuilder.setProgress(0, 0, true)
-        notificationMgr.notify(0,notificationBuilder.build())
+        notificationMgr.notify(0, notificationBuilder.build())
 
         for (remoteRepo in repos!!) {
 
@@ -79,22 +83,26 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
 
             if (localRepo != null) {
                 Log.d("FileSyncService", localRepo.id + " " + localRepo.name)
-                compareReposAndSync(p3!!, authToken, localRepo, remoteRepo)
+                compareReposAndSync(p3!!, authToken, p0,serverAddress, localRepo, remoteRepo)
             } else {
                 Log.d("FileSyncService", remoteRepo.name + " not marked for sync")
             }
         }
+        context.sendBroadcast(Intent(OnBootReceiver.ACTION_RESTART_FILE_OBSERVER))
         notificationBuilder.setContentText("Synchronization complete")
                 // Removes the progress bar
-                .setProgress(0,0,false)
+                .setProgress(0, 0, false)
         notificationMgr.notify(0, notificationBuilder.build())
     }
 
     fun compareReposAndSync(contentProviderClient: ContentProviderClient, authToken: String,
+                            account: Account,serverAddress: String,
                             localRepo: Repo, remoteRepo: Repo) {
         if (localRepo.mtime!! != remoteRepo.mtime!!) {
             // Retrieve list of content from server
-            val syncSuccess = syncDirectoryRecursive(contentProviderClient, authToken, localRepo,
+            val syncSuccess = syncDirectoryRecursive(contentProviderClient, authToken, account,
+                    serverAddress,
+                    localRepo,
                     localRepo, "/")
             if (syncSuccess) updateCreateItemIfSyncSuccessful(syncSuccess, localRepo,
                     remoteRepo.mtime!!, remoteRepo.size!!, "")
@@ -102,12 +110,16 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
     }
 
     fun syncDirectoryRecursive(contentProviderClient: ContentProviderClient, authToken: String,
+                               account: Account, serverAddress: String,
                                parent: Syncable,
                                repo: Repo, path: String): Boolean {
         val localItemsForRepo = storageManager.getItemsForRepo(repo,
                 path).toMutableMap()
-        val remoteItemsForRepo = restApi.getDirectoryEntriesSync(authToken, repo.id!!,
+        val remoteItemsForRepo = restApi.getDirectoryEntriesSync(authToken,serverAddress, repo.id!!,
                 path).execute().body() ?: return false
+
+        cache.writeDirectoryList(account.name, repo.id!!, path.removeSuffix("/"),
+                remoteItemsForRepo, true)
 
         //TODO: add accountname to path and extract path building into a method in storagemgr
         // If we're in the root directory we have to check if the repo should be synced
@@ -133,7 +145,7 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
                 SyncType.DIR_SYNCED_AND_MODIFIED, SyncType.DIR_SYNCED_FRESH -> {
                     Log.d("FileSyncAdapter", type.toString() + " - " + item.path + item.name)
                     val directorySynced = syncDirectoryRecursive(contentProviderClient,
-                            authToken, item, repo, path + item.name + "/")
+                            authToken, account,serverAddress, item, repo, path + item.name + "/")
                     syncSuccessful = if (syncSuccessful) directorySynced else false
                     updateCreateItemIfSyncSuccessful(directorySynced, item,
                             remoteItem.mtime!!,

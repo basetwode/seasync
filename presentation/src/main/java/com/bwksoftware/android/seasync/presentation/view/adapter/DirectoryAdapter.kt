@@ -94,6 +94,7 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
 
         if (holder is FileHolder && item is FileItem) {
             holder.syncedImg.visibility = if (item.synced) View.VISIBLE else View.GONE
+            holder.cachedImg.visibility = if (item.isCached) View.VISIBLE else View.GONE
 
             holder.itemName.text = item.name
             holder.itemDateSize.text = FileUtils.readableFileSize(
@@ -146,6 +147,8 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
         }
 
         val syncedImg: ImageView = itemView.findViewById(R.id.synced_img)
+        val cachedImg: ImageView = itemView.findViewById(R.id.cached_img)
+
         val itemImg: ImageView = itemView.findViewById(R.id.file_img)
         val itemName: TextView = itemView.findViewById(R.id.file_name)
         val itemDateSize: TextView = itemView.findViewById(R.id.file_datesize)

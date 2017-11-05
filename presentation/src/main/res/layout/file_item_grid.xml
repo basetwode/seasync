@@ -35,10 +35,18 @@
             android:layout_height="15dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_margin="1dp"
+            android:layout_margin="5dp"
             android:src="@drawable/synced"
             android:visibility="gone" />
-
+            <ImageView
+                android:id="@+id/cached_img"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_margin="5dp"
+                android:src="@drawable/downloaded"
+                android:visibility="gone" />
             <TextView
                 android:id="@+id/file_name"
                 android:background="@color/cardview_light_background"
