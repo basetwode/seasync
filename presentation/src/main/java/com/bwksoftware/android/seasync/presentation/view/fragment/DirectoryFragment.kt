@@ -17,6 +17,7 @@
 package com.bwksoftware.android.seasync.presentation.view.fragment
 
 import android.accounts.Account
+import android.app.Activity
 import android.graphics.Color
 import android.graphics.LightingColorFilter
 import android.os.Bundle
@@ -31,7 +32,9 @@ import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.R
+import com.bwksoftware.android.seasync.presentation.components.BottomSheet
 import com.bwksoftware.android.seasync.presentation.components.GridLayoutManager
+import com.bwksoftware.android.seasync.presentation.model.BottomSheetItem
 import com.bwksoftware.android.seasync.presentation.model.DirectoryItem
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.DirectoryPresenter
@@ -56,7 +59,7 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                            directory: String, file: String)
 
         fun onRevealClicked(fragment: BaseFragment, repoId: String, repoName: String,
-                            directory: String, storage: String,file: String)
+                            directory: String, storage: String, file: String)
     }
 
     companion object {
@@ -87,6 +90,12 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
 
     lateinit var rvDirectory: RecyclerView
 
+    private lateinit var address: String
+
+    lateinit var repoId : String
+    lateinit var repoName : String
+    lateinit var directory : String
+
     override fun layoutId() = R.layout.fragment_directory
 
     override fun name() = arguments.getString(PARAM_REPONAME) + arguments.getString(
@@ -94,11 +103,13 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
 
     override fun activity() = activity
 
-    private lateinit var address: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appComponent.inject(this)
+        repoId = arguments.getString(PARAM_REPOID)
+        repoName = arguments.getString(PARAM_REPONAME)
+        directory = arguments.getString(PARAM_DIRECTORY)
         address = seafAccountManager.getServerAddress(seafAccountManager.getCurrentAccount())!!
         directoryAdapter = DirectoryAdapter(this,
                 isGridView(),
@@ -181,7 +192,7 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         val sheetView = activity.layoutInflater.inflate(R.layout.item_bottom_sheet,
                 null)
         mBottomSheetDialog.setContentView(sheetView)
-        val bottomSheet = BottomSheet(item, sheetView)
+        val bottomSheet = BottomSheet(BottomSheetItem(item), sheetView, this, repoName,repoId,directory,seafAccountManager,address)
         bottomSheet.openButton.setOnClickListener({
             onDirectoryClicked(item, position)
             mBottomSheetDialog.dismiss()
@@ -213,7 +224,8 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         val sheetView = activity.layoutInflater.inflate(R.layout.item_bottom_sheet,
                 null)
         mBottomSheetDialog.setContentView(sheetView)
-        val bottomSheet = BottomSheet(item, sheetView)
+        val bottomSheet = BottomSheet(BottomSheetItem(item), sheetView, this, repoName,repoId,directory,seafAccountManager,address)
+
         bottomSheet.openButton.setOnClickListener({
             onFileClicked(item, position)
             mBottomSheetDialog.dismiss()
@@ -313,83 +325,5 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         switchView(isGridView())
     }
 
-    inner class BottomSheet(item: Item, view: View) {
-        val options: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_options)
-
-        val openButton: LinearLayout = view.findViewById(R.id.bottom_sheet_open)
-        val syncButton: LinearLayout = view.findViewById(R.id.bottom_sheet_sync)
-        val syncButtonImg: ImageView = view.findViewById(R.id.bottom_sheet_sync_img)
-        val syncButtonText: TextView = view.findViewById(R.id.bottom_sheet_sync_text)
-        val title: TextView = view.findViewById(R.id.bottom_sheet_title)
-        val details: TextView = view.findViewById(R.id.bottom_sheet_details)
-        val syncExternalStorage: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_external)
-        val syncInternalStorage: LinearLayout = view.findViewById(R.id.bottom_sheet_sync_internal)
-        val localDetails: TextView = view.findViewById(R.id.bottom_sheet_local_details)
-        val itemImage: ImageView = view.findViewById(R.id.bottom_sheet_image)
-        val revealInFinder: LinearLayout = view.findViewById(R.id.bottom_sheet_reveal_finder)
-
-        init {
-            title.text = item.name
-            if (item.synced && !item.isRootSync) {
-                syncButton.isEnabled = false
-                val filter = LightingColorFilter(Color.WHITE,
-                        resources.getColor(R.color.disabledGreyDark))
-                syncButtonImg.colorFilter = filter
-                syncButtonText.setTextColor(resources.getColor(R.color.disabledGreyDark))
-                syncButton.setBackgroundColor(resources.getColor(R.color.disabledGrey))
-            }
-            if (item.synced) {
-                localDetails.text = "Location: ${item.storage}"
-                syncButtonImg.setImageDrawable(context.resources.getDrawable(R.drawable.unsync))
-                syncButtonText.text = "Unsync item"
-            } else {
-                syncButtonImg.setImageDrawable(context.resources.getDrawable(R.drawable.sync))
-                syncButtonText.text = "Sync item"
-            }
-            if (item.isCached)
-                localDetails.text = "Location: ${item.storage}"
-
-            if (item.storage == activity.getExternalFilesDir(null).absolutePath)
-                revealInFinder.visibility = View.VISIBLE
-
-            revealInFinder.setOnClickListener {
-                val attachedActivity = activity
-                when (attachedActivity) {
-                    is OnDirectoryClickedListener -> {
-                        attachedActivity.onRevealClicked(this@DirectoryFragment,
-                                arguments.getString(PARAM_REPOID),
-                                arguments.getString(PARAM_REPONAME),
-                                arguments.getString(PARAM_DIRECTORY),item.storage, item.name!!)
-                    }
-                }
-            }
-
-            details.text = FileUtils.readableFileSize(
-                    item.size!!) + ", " + FileUtils.translateCommitTime(item.mtime!! * 1000,
-                    context)
-            if (FileUtils.isViewableImage(item.name!!)) {
-                val dir = arguments.getString(PARAM_DIRECTORY)
-                val repo = arguments.getString(PARAM_REPOID)
-
-                val file = URLEncoder.encode(dir + "/" + item.name, "UTF-8")
-                val url = FileUtils.getThumbnailUrl(address, repo, file, 100)
-                ImageLoader.getInstance().displayImage(url, itemImage, getDisplayImageOptions())
-            } else if (item is DirectoryItem)
-                itemImage.setImageDrawable(resources.getDrawable(R.drawable.folder))
-
-        }
-    }
-
-    fun getDisplayImageOptions(): DisplayImageOptions? =
-            DisplayImageOptions.Builder()
-                    .extraForDownloader(seafAccountManager.getCurrentAccountToken())
-                    .delayBeforeLoading(50)
-                    .resetViewBeforeLoading(true)
-                    .showImageForEmptyUri(R.drawable.empty_profile)
-                    .showImageOnFail(R.drawable.empty_profile)
-                    .cacheInMemory(true)
-                    .cacheOnDisk(true)
-                    .considerExifParams(true)
-                    .build()
 
 }

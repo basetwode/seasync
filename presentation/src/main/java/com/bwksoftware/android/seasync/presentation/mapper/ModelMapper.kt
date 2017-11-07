@@ -2,6 +2,7 @@ package com.bwksoftware.android.seasync.presentation.mapper
 
 import com.bwksoftware.android.seasync.domain.AvatarTemplate
 import com.bwksoftware.android.seasync.domain.ItemTemplate
+import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.model.Avatar
 import com.bwksoftware.android.seasync.presentation.model.DirectoryItem
 import com.bwksoftware.android.seasync.presentation.model.FileItem
@@ -21,7 +22,7 @@ class ModelMapper @Inject constructor() {
             "dir" -> DirectoryItem(item.id, item.name, item.mtime, item.size, item.storage,
                     item.synced, item.isCached, item.isRootSync)
             else -> Item(item.id, item.name, item.mtime, item.size, Item.UNKNOWN, item.storage,
-                    item.synced, item.isCached, item.isRootSync)
+                    item.synced, item.isCached, item.isRootSync, R.drawable.empty_profile)
         }
     }
 

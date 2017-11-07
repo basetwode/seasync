@@ -104,6 +104,24 @@ class DiskCache @Inject constructor(context: Context) {
                 }
     }
 
+    fun mergeRepoList(cachedList: List<Repo>,
+                      remoteList: List<Repo>): ArrayList<Repo> {
+        val cachedMap = cachedList.associateBy({ it.id }, { it })
+        val mergedList = ArrayList<Repo>()
+        val remainingFiles = cachedMap.toMutableMap()
+        for (repo in remoteList) {
+            val localItem = cachedMap[repo.id]
+            if (localItem != null) {
+                remainingFiles.remove(localItem.id)
+                mergedList.add(repo)
+                repo.synced = localItem.synced
+                repo.isRootSync = localItem.isRootSync
+                repo.storage = localItem.storage
+            }
+        }
+        return mergedList
+    }
+
     fun readRepoList(account: String): List<Repo> {
         val accountDir = File(cacheDir, account)
         val reposFile = File(accountDir, "repos$SEASYNC_CACHE_EXTENSION")
@@ -111,12 +129,19 @@ class DiskCache @Inject constructor(context: Context) {
         return gson.fromJson<List<Repo>>(reposFile.readText(), listType)
     }
 
-    fun writeRepoList(account: String, repos: List<Repo>) {
+    fun writeRepoList(account: String, repos: List<Repo>, merge: Boolean) {
         val accountDir = File(cacheDir, account)
         val reposFile = File(accountDir, "repos$SEASYNC_CACHE_EXTENSION")
         val directory = File(reposFile.absolutePath.substringBeforeLast("/"))
         directory.mkdirs()
-        reposFile.writeText(gson.toJson(repos))
+        if (reposFile.exists() && merge) {
+            val localFile = readRepoList(account)
+            val mergedList = mergeRepoList(localFile, repos)
+            reposFile.writeText(gson.toJson(mergedList))
+        } else {
+            reposFile.writeText(gson.toJson(repos))
+        }
+
         setLastUpdateTime(System.currentTimeMillis())
     }
 

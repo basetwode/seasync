@@ -40,7 +40,9 @@ class FileRepoContract {
             val REPO_ID = "repo_id"
             val STORAGE = "repo_storage"
             val ACCOUNT = "repo_account"
-
+            val SIZE = "repo_size"
+            val PERMISSION = "repo_permission"
+            val ENCRYPTED = "repo_encrypted"
         }
     }
 

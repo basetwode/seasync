@@ -37,6 +37,7 @@ class DataRepository @Inject constructor(val restService: RestApiImpl,
                                          val dataStoreFactory: DataStoreFactory,
                                          val entityDataMapper: EntityDataMapper) : Repository {
 
+
     override fun getDirectoryEntries(authToken: String, repoId: String,
                                      directory: String): Observable<List<ItemTemplate>> {
         val currAccount = seafAccountManager.getCurrentAccount()
@@ -87,6 +88,18 @@ class DataRepository @Inject constructor(val restService: RestApiImpl,
         return Observable.fromCallable {
             entityDataMapper.transformItem(storageManager.unsyncItem(repoId, directory, name),
                     repoId, directory)
+        }
+    }
+
+    override fun syncRepo(authToken: String, repoId: String, storage: String): Observable<RepoTemplate> {
+        return Observable.fromCallable {
+            entityDataMapper.transformRepo(storageManager.createNewRepoSync(authToken, repoId, storage))
+        }
+    }
+
+    override fun unsyncRepo(authToken: String, repoId: String, storage: String): Observable<RepoTemplate> {
+        return Observable.fromCallable {
+            entityDataMapper.transformRepo(storageManager.createNewRepoSync(authToken, repoId, storage))
         }
     }
 

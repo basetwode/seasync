@@ -21,4 +21,5 @@ import com.bwksoftware.android.seasync.presentation.model.Repo
 
 interface RepoView : LoadDataView {
     fun renderRepos(repos: List<Repo>)
+    fun updateRepo(repo: Repo, position: Int)
 }

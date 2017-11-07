@@ -33,6 +33,9 @@ class DBHelper @Inject constructor(val context: Context) : SQLiteOpenHelper(cont
                         FileRepoContract.RepoColumns.FULL_SYNCED + " INTEGER, " +
                         FileRepoContract.RepoColumns.STORAGE + " TEXT," +
                         FileRepoContract.RepoColumns.ACCOUNT + " TEXT, " +
+                        FileRepoContract.RepoColumns.ENCRYPTED + " INTEGER, " +
+                        FileRepoContract.RepoColumns.SIZE + " INTEGER, " +
+                        FileRepoContract.RepoColumns.PERMISSION + " TEXT, " +
                         FileRepoContract.RepoColumns.MOD_DATE + " INTEGER);"
         )
     }
@@ -59,6 +62,6 @@ class DBHelper @Inject constructor(val context: Context) : SQLiteOpenHelper(cont
 
     companion object {
         val DATABASE_VERSION = 1
-        val DATABASE_NAME = "seasyncss.db"
+        val DATABASE_NAME = "seasyncss2.db"
     }
 }

@@ -5,5 +5,5 @@ package com.bwksoftware.android.seasync.presentation.model
  */
 class Repo(val id: String?, val name: String?, val permission: String?, val owner: String?,
            val encrypted: Boolean?,
-           val mtime: Long?, val size: Long?, val synced: Boolean, val storage: String,
+           val mtime: Long?, val size: Long?, var synced: Boolean, var storage: String,
            val drawable: Int?)

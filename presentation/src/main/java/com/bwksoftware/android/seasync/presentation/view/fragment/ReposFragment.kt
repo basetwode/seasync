@@ -18,11 +18,15 @@ package com.bwksoftware.android.seasync.presentation.view.fragment
 
 import android.accounts.Account
 import android.os.Bundle
+import android.support.design.widget.BottomSheetDialog
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
+import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.presentation.R
+import com.bwksoftware.android.seasync.presentation.components.BottomSheet
+import com.bwksoftware.android.seasync.presentation.model.BottomSheetItem
 import com.bwksoftware.android.seasync.presentation.model.Repo
 import com.bwksoftware.android.seasync.presentation.presenter.RepoPresenter
 import com.bwksoftware.android.seasync.presentation.view.adapter.RepoAdapter
@@ -34,6 +38,7 @@ class ReposFragment : BaseFragment(), RepoView, RepoAdapter.OnItemClickListener 
 
     interface OnRepoClickedListener {
         fun onRepoClicked(fragment: BaseFragment, repoId: String, repoName: String)
+
     }
 
     companion object {
@@ -49,9 +54,14 @@ class ReposFragment : BaseFragment(), RepoView, RepoAdapter.OnItemClickListener 
     }
 
     @Inject lateinit var repoPresenter: RepoPresenter
+    @Inject lateinit var seafAccountManager: SeafAccountManager
+
+
     lateinit var repoAdapter: RepoAdapter
 
     lateinit var rvRepos: RecyclerView
+
+    lateinit var address: String
 
     override fun layoutId() = R.layout.fragment_repos
 
@@ -63,6 +73,7 @@ class ReposFragment : BaseFragment(), RepoView, RepoAdapter.OnItemClickListener 
         super.onCreate(savedInstanceState)
         appComponent.inject(this)
         repoAdapter = RepoAdapter(this, context)
+        address = seafAccountManager.getServerAddress(seafAccountManager.getCurrentAccount())!!
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -86,12 +97,47 @@ class ReposFragment : BaseFragment(), RepoView, RepoAdapter.OnItemClickListener 
         repoAdapter.notifyDataSetChanged()
     }
 
+    override fun updateRepo(repo: Repo, position: Int) {
+        val currRepo = repoAdapter.getRepo(position)
+        currRepo.synced = repo.synced
+        currRepo.storage = repo.storage
+        repoAdapter.notifyItemChanged(position)
+    }
+
     override fun onRepoClicked(repo: Repo) {
         val attachedActivity = activity
         when (attachedActivity) {
             is OnRepoClickedListener -> attachedActivity.onRepoClicked(this,
                     repo.id!!, repo.name!!)
         }
+    }
+
+    override fun onRepoLongClicked(repo: Repo, position: Int) {
+        val mBottomSheetDialog = BottomSheetDialog(activity)
+        val sheetView = activity.layoutInflater.inflate(R.layout.item_bottom_sheet,
+                null)
+        mBottomSheetDialog.setContentView(sheetView)
+        val bottomSheet = BottomSheet(BottomSheetItem(repo), sheetView, this, repo.name!!, repo.id!!, "", seafAccountManager, address)
+        bottomSheet.openButton.setOnClickListener({
+            onRepoClicked(repo)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncButton.setOnClickListener({
+            if (repo.synced) {
+                //todo implement unsync
+                mBottomSheetDialog.dismiss()
+            } else
+                bottomSheet.options.visibility = if (bottomSheet.options.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        })
+        bottomSheet.syncExternalStorage.setOnClickListener({
+            repoPresenter.synchronizeRepo(arguments.getString(PARAM_ACCOUNT), context.getExternalFilesDir(null).absolutePath, repo, position)
+            mBottomSheetDialog.dismiss()
+        })
+        bottomSheet.syncInternalStorage.setOnClickListener({
+            repoPresenter.synchronizeRepo(arguments.getString(PARAM_ACCOUNT), context.filesDir.absolutePath, repo, position)
+            mBottomSheetDialog.dismiss()
+        })
+        mBottomSheetDialog.show()
     }
 
     private fun loadRepos() {

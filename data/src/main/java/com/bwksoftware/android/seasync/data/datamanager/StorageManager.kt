@@ -209,6 +209,11 @@ class StorageManager @Inject constructor(val context: Context,
         repo.mtime = cursor.getLong(cursor.getColumnIndex(FileRepoContract.RepoColumns.MOD_DATE))
         repo.synced = cursor.getInt(cursor.getColumnIndex(
                 FileRepoContract.RepoColumns.FULL_SYNCED)) == 1
+        repo.encrypted = cursor.getInt(cursor.getColumnIndex(
+                FileRepoContract.RepoColumns.ENCRYPTED)) == 1
+        repo.size = cursor.getLong(cursor.getColumnIndex(FileRepoContract.RepoColumns.SIZE))
+        repo.permission = cursor.getString(
+                cursor.getColumnIndex(FileRepoContract.RepoColumns.PERMISSION))
         repo.storage = cursor.getString(cursor.getColumnIndex(FileRepoContract.RepoColumns.STORAGE))
         return repo
     }
@@ -279,6 +284,7 @@ class StorageManager @Inject constructor(val context: Context,
     }
 
     fun saveRepoInstance(repo: Repo) {
+        updateCacheForRepo(repo)
         val contentValues = ContentValues()
         contentValues.put(FileRepoContract.RepoColumns.NAME, repo.name)
         contentValues.put(FileRepoContract.RepoColumns.MOD_DATE, repo.mtime)
@@ -286,6 +292,9 @@ class StorageManager @Inject constructor(val context: Context,
         contentValues.put(FileRepoContract.RepoColumns.REPO_ID, repo.id)
         contentValues.put(FileRepoContract.RepoColumns.STORAGE, repo.storage)
         contentValues.put(FileRepoContract.RepoColumns.ACCOUNT, currAccount().name)
+        contentValues.put(FileRepoContract.RepoColumns.ENCRYPTED, repo.encrypted)
+        contentValues.put(FileRepoContract.RepoColumns.PERMISSION, repo.permission)
+        contentValues.put(FileRepoContract.RepoColumns.SIZE, repo.size)
 
         if (repo.dbId != null) {
             val resultUri = contentProviderClient.update(FileRepoContract.Repo.buildRepoUri(
@@ -299,6 +308,23 @@ class StorageManager @Inject constructor(val context: Context,
             val id = resultUri.pathSegments[1]
             repo.dbId = id.toLong()
         }
+    }
+
+    fun updateCacheForRepo(repo: Repo) {
+        var name = currAccount().name
+        if (name == "None")
+            name = seafAccountManager.getCurrentAccount().name
+        val cachedItems: List<Repo> = cache.readRepoList(name)
+        var newItem: Repo? = null
+        cachedItems
+                .filter { it.id == repo.id }
+                .forEach {
+                    it.isRootSync = repo.isRootSync
+                    it.synced = repo.synced
+                    it.storage = repo.storage
+                    newItem = it
+                }
+        cache.writeRepoList(name, cachedItems, false)
     }
 
     fun getFile(hash: String): Item? {
@@ -410,6 +436,23 @@ class StorageManager @Inject constructor(val context: Context,
         deleteParentsIfUnsyncedRecursive(repo, item)
         item.synced = false
         return item
+    }
+
+    fun createNewRepoSync(authToken: String, repoHash: String, storage: String): Repo {
+        var localRepo = getRepo(repoHash)
+        if (localRepo == null) {
+            val currAccount = seafAccountManager.getCurrentAccount()
+            val serverAddress = seafAccountManager.getServerAddress(currAccount)!!
+            restApi.getRepoListSync(authToken, serverAddress).execute().body()!!
+                    .filter { it.id == repoHash }
+                    .forEach { localRepo = it }
+        }
+        localRepo!!.mtime = 0
+        localRepo!!.isRootSync = true
+        localRepo!!.synced = true
+        localRepo!!.storage = storage
+        saveRepoInstance(localRepo!!)
+        return localRepo!!
     }
 
     fun createNewSync(authToken: String, repoHash: String, path: String, name: String,

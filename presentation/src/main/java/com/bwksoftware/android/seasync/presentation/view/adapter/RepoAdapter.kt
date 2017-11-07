@@ -41,6 +41,10 @@ class RepoAdapter(val onItemClickLister: OnItemClickListener,
         mItems.addAll(newItems)
     }
 
+    fun getRepo(position: Int): Repo {
+        return mItems[position]
+    }
+
     override fun getItemViewType(position: Int): Int {
         return 1
     }
@@ -69,28 +73,34 @@ class RepoAdapter(val onItemClickLister: OnItemClickListener,
     }
 
     inner class RepoHolder(itemView: View) : RecyclerView.ViewHolder(
-            itemView), View.OnClickListener {
-
-        init {
-            itemView.setOnClickListener(this)
-        }
-
-        override fun onClick(v: View?) {
-            val item: Repo = mItems[layoutPosition]
-            onItemClickLister.onRepoClicked(item)
-
-
-        }
+            itemView), View.OnClickListener, View.OnLongClickListener {
 
         val repoImg: ImageView = itemView.findViewById(R.id.repo_img)
         val syncedImg: ImageView = itemView.findViewById(R.id.synced_img)
         val repoName: TextView = itemView.findViewById(R.id.repo_name)
         val repoDateModified: TextView = itemView.findViewById(R.id.repo_datemodified)
 
+        init {
+            itemView.setOnClickListener(this)
+            itemView.setOnLongClickListener(this)
+        }
+
+        override fun onClick(v: View?) {
+            val item: Repo = mItems[layoutPosition]
+            onItemClickLister.onRepoClicked(item)
+        }
+
+        override fun onLongClick(v: View?): Boolean {
+            val item = mItems[layoutPosition]
+            onItemClickLister.onRepoLongClicked(item, layoutPosition)
+            return true
+        }
+
     }
 
     interface OnItemClickListener {
         fun onRepoClicked(repo: Repo)
+        fun onRepoLongClicked(repo: Repo, position: Int)
     }
 
 

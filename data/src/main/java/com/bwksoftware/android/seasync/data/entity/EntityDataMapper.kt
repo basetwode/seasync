@@ -37,7 +37,7 @@ class EntityDataMapper @Inject constructor(val storageManager: StorageManager) {
 
     fun transformRepo(repo: Repo): RepoTemplate {
         return RepoTemplate(repo.id, repo.name, repo.permission, repo.owner, repo.encrypted,
-                repo.mtime, repo.size, false, "")
+                repo.mtime, repo.size, repo.synced ?:false, repo.storage ?: "")
     }
 
     fun transformRepoList(repoList: List<Repo>): List<RepoTemplate> {

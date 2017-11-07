@@ -7,6 +7,6 @@ class FileItem(id: String?, name: String?, mtime: Long?, size: Long, storage: St
                synced: Boolean
                , isCached: Boolean, isRootSync: Boolean) : Item(id,
         name, mtime,
-        size, TYPE_FILE, storage, synced, isCached,isRootSync) {
+        size, TYPE_FILE, storage, synced, isCached,isRootSync,0) {
 
 }

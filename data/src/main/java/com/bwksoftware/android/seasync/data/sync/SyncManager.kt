@@ -24,7 +24,7 @@ class SyncManager {
                 // todo change the file location/name according to your needs
                 val futureStudioIconFile = File(path, filename)
                 futureStudioIconFile.parentFile.mkdirs()
-                Log.d("Files", futureStudioIconFile.absolutePath)
+                Log.d("Downloading ", futureStudioIconFile.absolutePath)
                 var inputStream: InputStream? = null
                 var outputStream: OutputStream? = null
 

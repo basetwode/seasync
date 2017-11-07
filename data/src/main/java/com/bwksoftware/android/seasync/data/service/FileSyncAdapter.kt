@@ -49,12 +49,13 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
                 SharedPrefsController(context)), restApi)
 
         storageManager.contentProviderClient = p3!!
-        val serverAddress =AccountManager.get(context).getUserData(p0, "Server")
+        val serverAddress = AccountManager.get(context).getUserData(p0, "Server")
         val authToken = accountManager.blockingGetAuthToken(p0, "full_access",
                 true)
 
+
         // retrieve list of repos and compare their modified time to local repos from db
-        val repos = restApi.getRepoListSync(authToken,serverAddress).execute().body()
+        val repos = restApi.getRepoListSync(authToken, serverAddress).execute().body()
         printFilesRecursive(mContext.filesDir)
         if (repos == null)
             return
@@ -83,7 +84,7 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
 
             if (localRepo != null) {
                 Log.d("FileSyncService", localRepo.id + " " + localRepo.name)
-                compareReposAndSync(p3!!, authToken, p0,serverAddress, localRepo, remoteRepo)
+                compareReposAndSync(p3!!, authToken, p0, serverAddress, localRepo, remoteRepo)
             } else {
                 Log.d("FileSyncService", remoteRepo.name + " not marked for sync")
             }
@@ -96,7 +97,7 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
     }
 
     fun compareReposAndSync(contentProviderClient: ContentProviderClient, authToken: String,
-                            account: Account,serverAddress: String,
+                            account: Account, serverAddress: String,
                             localRepo: Repo, remoteRepo: Repo) {
         if (localRepo.mtime!! != remoteRepo.mtime!!) {
             // Retrieve list of content from server
@@ -115,7 +116,8 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
                                repo: Repo, path: String): Boolean {
         val localItemsForRepo = storageManager.getItemsForRepo(repo,
                 path).toMutableMap()
-        val remoteItemsForRepo = restApi.getDirectoryEntriesSync(authToken,serverAddress, repo.id!!,
+        val remoteItemsForRepo = restApi.getDirectoryEntriesSync(authToken, serverAddress,
+                repo.id!!,
                 path).execute().body() ?: return false
 
         cache.writeDirectoryList(account.name, repo.id!!, path.removeSuffix("/"),
@@ -145,7 +147,7 @@ class FileSyncAdapter constructor(val mContext: Context) : AbstractThreadedSyncA
                 SyncType.DIR_SYNCED_AND_MODIFIED, SyncType.DIR_SYNCED_FRESH -> {
                     Log.d("FileSyncAdapter", type.toString() + " - " + item.path + item.name)
                     val directorySynced = syncDirectoryRecursive(contentProviderClient,
-                            authToken, account,serverAddress, item, repo, path + item.name + "/")
+                            authToken, account, serverAddress, item, repo, path + item.name + "/")
                     syncSuccessful = if (syncSuccessful) directorySynced else false
                     updateCreateItemIfSyncSuccessful(directorySynced, item,
                             remoteItem.mtime!!,

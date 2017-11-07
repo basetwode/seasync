@@ -21,12 +21,16 @@ import com.bwksoftware.android.seasync.domain.RepoTemplate
 import com.bwksoftware.android.seasync.domain.interactor.DefaultObserver
 import com.bwksoftware.android.seasync.domain.interactor.GetRepoList
 import com.bwksoftware.android.seasync.data.authentication.Authenticator
+import com.bwksoftware.android.seasync.domain.interactor.CreateRepoSync
+import com.bwksoftware.android.seasync.domain.interactor.CreateSync
 import com.bwksoftware.android.seasync.presentation.mapper.RepoModelMapper
+import com.bwksoftware.android.seasync.presentation.model.Repo
 import com.bwksoftware.android.seasync.presentation.view.views.RepoView
 import javax.inject.Inject
 
 
 class RepoPresenter @Inject constructor(val getRepoList: GetRepoList,
+                                        val syncRepo: CreateRepoSync,
                                         val repoModelMapper: RepoModelMapper) {
 
     internal lateinit var repoView: RepoView
@@ -39,6 +43,11 @@ class RepoPresenter @Inject constructor(val getRepoList: GetRepoList,
         this.getRepoList.execute(RepoObserver(), GetRepoList.Params(false, authToken))
     }
 
+    fun synchronizeRepo(accountName: String, storage: String, repo: Repo, position: Int) {
+        val authToken = authenticator.getCurrentUserAuthToken(accountName, repoView.activity())
+        syncRepo.execute(RepoSyncObserver(position), CreateRepoSync.Params(authToken,
+                repo.id!!, storage))
+    }
 
     private inner class RepoObserver : DefaultObserver<List<RepoTemplate>>() {
 
@@ -54,4 +63,15 @@ class RepoPresenter @Inject constructor(val getRepoList: GetRepoList,
             repoView.renderRepos(repoModelMapper.transformRepos(repoList))
         }
     }
+
+    private inner class RepoSyncObserver(val position: Int) : DefaultObserver<RepoTemplate>() {
+        override fun onError(exception: Throwable) {
+            Log.d("RepoPresenter", exception.localizedMessage)
+        }
+
+        override fun onNext(t: RepoTemplate) {
+            repoView.updateRepo(repoModelMapper.transformRepo(t),position)
+        }
+    }
+
 }

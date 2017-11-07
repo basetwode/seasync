@@ -33,7 +33,11 @@ interface Repository {
     fun syncItem(authToken: String, repoId: String, directory: String, name: String,
                  storage: String, type: String): Observable<ItemTemplate>
 
+    fun syncRepo(authToken: String, repoId: String, storage: String): Observable<RepoTemplate>
+
     fun unsyncItem(repoId: String, directory: String, name: String): Observable<ItemTemplate>
+    fun unsyncRepo(authToken: String, repoId: String, storage: String): Observable<RepoTemplate>
+
     fun cacheFile(authToken: String, repoID: String, directory: String,
                   fileName: String): Observable<ItemTemplate>
 }
