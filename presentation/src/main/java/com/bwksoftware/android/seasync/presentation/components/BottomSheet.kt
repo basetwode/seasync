@@ -26,6 +26,7 @@ import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.model.BottomSheetItem
+import com.bwksoftware.android.seasync.presentation.utils.IconUtils
 import com.bwksoftware.android.seasync.presentation.view.fragment.BaseFragment
 import com.bwksoftware.android.seasync.presentation.view.fragment.DirectoryFragment
 import com.nostra13.universalimageloader.core.DisplayImageOptions
@@ -101,6 +102,8 @@ class BottomSheet(item: BottomSheetItem, view: View, fragment: BaseFragment,
             ImageLoader.getInstance().displayImage(url, itemImage, getDisplayImageOptions())
         } else if (item.drawableId > 0)
             itemImage.setImageDrawable(fragment.resources.getDrawable(item.drawableId))
+        else itemImage.setImageResource(IconUtils.getIconFromName(activity, item.name))
+
 
     }
 

@@ -34,6 +34,7 @@ import com.bwksoftware.android.seasync.presentation.model.FileItem
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_DIRECTORY
 import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_FILE
+import com.bwksoftware.android.seasync.presentation.utils.IconUtils
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
 import com.nostra13.universalimageloader.core.assist.FailReason
@@ -129,7 +130,8 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
                 )
 
             } else {
-                holder.itemImg.setImageResource(R.drawable.empty_profile)
+                val iconRes = IconUtils.getIconFromName(context, item.name)
+                holder.itemImg.setImageResource(iconRes)
                 holder.itemName.visibility = View.VISIBLE
 
             }
