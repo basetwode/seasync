@@ -166,7 +166,7 @@ class StorageManager @Inject constructor(val context: Context,
     }
 
     fun createFilePath(repo: Repo, item: Item): String {
-        return """${item.storage}/${currAccount().name}/${repo.name}/${item.path}"""
+        return """${item.storage}/${currAccount().name}/${repo.id}/${item.path}"""
     }
 
     fun uploadAndUpdateItem(authToken: String, repo: Repo, localItem: Item,

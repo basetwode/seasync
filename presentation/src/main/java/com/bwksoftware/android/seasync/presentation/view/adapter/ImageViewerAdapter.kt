@@ -14,13 +14,13 @@ import com.bwksoftware.android.seasync.presentation.components.TouchImageView
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
-import java.net.URLEncoder
 
 
 class ImageViewerAdapter(val context: Context,
                          val address: String,
                          val directory: String,
                          val repoId: String,
+                         val account: String,
                          val token: String) : PagerAdapter() {
 
     private val mItems: ArrayList<Item> = ArrayList()
@@ -48,8 +48,7 @@ class ImageViewerAdapter(val context: Context,
         val imgDisplay: TouchImageView = viewLayout.findViewById(R.id.imgDisplay)
         val btnClose: Button = viewLayout.findViewById(R.id.btnClose)
 
-        val fileName = URLEncoder.encode(directory + "/" + item.name, "UTF-8")
-        val url = FileUtils.getThumbnailUrl(address, repoId, fileName, 600)
+        val url = FileUtils.getThumbnailUrl(address, repoId, item.name!!, item.storage,directory,account,600)
         ImageLoader.getInstance().displayImage(url, imgDisplay, getDisplayImageOptions);
 
         (container as ViewPager).addView(viewLayout)

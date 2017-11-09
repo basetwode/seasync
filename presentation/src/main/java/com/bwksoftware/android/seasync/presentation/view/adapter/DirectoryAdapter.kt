@@ -17,6 +17,7 @@
 package com.bwksoftware.android.seasync.presentation.view.adapter
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.support.v7.widget.RecyclerView
@@ -35,13 +36,15 @@ import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_DI
 import com.bwksoftware.android.seasync.presentation.model.Item.Companion.TYPE_FILE
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
-import java.net.URLEncoder
+import com.nostra13.universalimageloader.core.assist.FailReason
+import com.nostra13.universalimageloader.core.assist.ImageScaleType
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener
 
 
 class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
                        var isGridView: Boolean,
                        val address: String,
-                       val repoId: String, val directory: String,
+                       val repoId: String, val directory: String, val account: String,
                        val token: String,
                        val context: Context) : Adapter<RecyclerView.ViewHolder>() {
 
@@ -103,9 +106,27 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
             if (FileUtils.isViewableImage(item.name!!)) {
                 holder.itemName.visibility = if (isGridView) View.GONE else View.VISIBLE
 
-                val file = URLEncoder.encode(directory + "/" + item.name, "UTF-8")
-                val url = FileUtils.getThumbnailUrl(address, repoId, file, 100)
-                ImageLoader.getInstance().displayImage(url, holder.itemImg, getDisplayImageOptions);
+                val url = FileUtils.getThumbnailUrl(address, repoId, item.name, item.storage,
+                        directory, account,
+                        100)
+                ImageLoader.getInstance().displayImage(url, holder.itemImg,
+                        getDisplayImageOptions.build(),
+                        object : ImageLoadingListener {
+                            override fun onLoadingComplete(imageUri: String?, view: View?,
+                                                           loadedImage: Bitmap?) {
+                            }
+
+                            override fun onLoadingStarted(imageUri: String?, view: View?) {}
+
+                            override fun onLoadingCancelled(imageUri: String?, view: View?) {}
+
+                            override fun onLoadingFailed(imageUri: String?, view: View?,
+                                                         failReason: FailReason?) {
+                                ImageLoader.getInstance().displayImage(url, holder.itemImg,
+                                        getDisplayImageOptions.delayBeforeLoading(1000).build())
+                            }
+                        }
+                )
 
             } else {
                 holder.itemImg.setImageResource(R.drawable.empty_profile)
@@ -204,7 +225,7 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
         }
     }
 
-    private var getDisplayImageOptions: DisplayImageOptions? =
+    private var getDisplayImageOptions: DisplayImageOptions.Builder =
             DisplayImageOptions.Builder()
                     .extraForDownloader(token)
                     .delayBeforeLoading(50)
@@ -213,8 +234,8 @@ class DirectoryAdapter(val onItemClickLister: OnItemClickListener,
                     .showImageOnFail(R.drawable.empty_profile)
                     .cacheInMemory(true)
                     .cacheOnDisk(true)
+                    .imageScaleType(ImageScaleType.IN_SAMPLE_INT)
                     .considerExifParams(true)
-                    .build()
 
 
 }

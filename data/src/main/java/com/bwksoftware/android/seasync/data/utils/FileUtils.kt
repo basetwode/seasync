@@ -3,6 +3,7 @@ package com.bwksoftware.android.seasync.data.utils
 import android.content.Context
 import android.webkit.MimeTypeMap
 import com.bwksoftware.android.seasync.data.R
+import java.io.File
 import java.net.URLEncoder
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -26,11 +27,21 @@ class FileUtils {
                     "%20").toLowerCase()
             val extension = MimeTypeMap.getFileExtensionFromUrl(encodedFileName)
             val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
-            return mime?:return "text/plain"
+            return mime ?: return "text/plain"
         }
 
-        fun getThumbnailUrl(address: String, repoId: String, fileName: String, size: Int): String {
-            return "https://$address/api2/repos/$repoId/thumbnail/?p=$fileName&size=$size"
+        fun getThumbnailUrl(address: String, repoId: String, fileName: String,
+                            storage: String, path: String,account:String,
+                            size: Int): String {
+            return if (storage.isEmpty()) {
+                val file = URLEncoder.encode(path + "/" + fileName, "UTF-8")
+
+                "https://$address/api2/repos/$repoId/thumbnail/?p=$file&size=$size"
+
+            } else {
+                val pathFile = File(File(File(storage, account),repoId), path)
+                "file://"+File(pathFile, fileName).absolutePath
+            }
         }
 
         fun readableFileSize(size: Long): String {

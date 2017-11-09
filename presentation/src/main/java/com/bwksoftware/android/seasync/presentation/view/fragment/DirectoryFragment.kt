@@ -17,17 +17,11 @@
 package com.bwksoftware.android.seasync.presentation.view.fragment
 
 import android.accounts.Account
-import android.app.Activity
-import android.graphics.Color
-import android.graphics.LightingColorFilter
 import android.os.Bundle
 import android.support.design.widget.BottomSheetDialog
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.RecyclerView
 import android.view.View
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import com.bwksoftware.android.seasync.data.utils.FileUtils
@@ -35,14 +29,10 @@ import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.components.BottomSheet
 import com.bwksoftware.android.seasync.presentation.components.GridLayoutManager
 import com.bwksoftware.android.seasync.presentation.model.BottomSheetItem
-import com.bwksoftware.android.seasync.presentation.model.DirectoryItem
 import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.presenter.DirectoryPresenter
 import com.bwksoftware.android.seasync.presentation.view.adapter.DirectoryAdapter
 import com.bwksoftware.android.seasync.presentation.view.views.DirectoryView
-import com.nostra13.universalimageloader.core.DisplayImageOptions
-import com.nostra13.universalimageloader.core.ImageLoader
-import java.net.URLEncoder
 import javax.inject.Inject
 
 
@@ -116,7 +106,8 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                 address!!,
                 arguments.getString(PARAM_REPOID),
                 arguments.getString(
-                        PARAM_DIRECTORY), seafAccountManager.getCurrentAccountToken(), context)
+                        PARAM_DIRECTORY),
+                arguments.getString(PARAM_ACCOUNT),seafAccountManager.getCurrentAccountToken(), context)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {

@@ -91,7 +91,8 @@ class ImageViewerFragment : BaseFragment(), ImageViewerView {
         imageViewerPagerAdapter = ImageViewerAdapter(context,
                 address!!,
                 arguments.getString(PARAM_DIRECTORY),
-                arguments.getString(PARAM_REPOID), seafAccountManager.getCurrentAccountToken())
+                arguments.getString(PARAM_REPOID), arguments.getString(PARAM_ACCOUNT),
+                seafAccountManager.getCurrentAccountToken())
     }
 
     private fun loadImages() {

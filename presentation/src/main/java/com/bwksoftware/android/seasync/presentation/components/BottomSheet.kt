@@ -16,7 +16,6 @@
 
 package com.bwksoftware.android.seasync.presentation.components
 
-import android.app.Activity
 import android.graphics.Color
 import android.graphics.LightingColorFilter
 import android.view.View
@@ -27,13 +26,10 @@ import com.bwksoftware.android.seasync.data.authentication.SeafAccountManager
 import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.model.BottomSheetItem
-import com.bwksoftware.android.seasync.presentation.model.DirectoryItem
-import com.bwksoftware.android.seasync.presentation.model.Item
 import com.bwksoftware.android.seasync.presentation.view.fragment.BaseFragment
 import com.bwksoftware.android.seasync.presentation.view.fragment.DirectoryFragment
 import com.nostra13.universalimageloader.core.DisplayImageOptions
 import com.nostra13.universalimageloader.core.ImageLoader
-import java.net.URLEncoder
 
 /**
  * Created by ansel on 11/7/2017.
@@ -100,10 +96,10 @@ class BottomSheet(item: BottomSheetItem, view: View, fragment: BaseFragment,
             val dir = directory
             val repo = repoId
 
-            val file = URLEncoder.encode(dir + "/" + item.name, "UTF-8")
-            val url = FileUtils.getThumbnailUrl(address, repo, file, 100)
+            val url = FileUtils.getThumbnailUrl(address, repo, item.name, item.storage, directory,
+                    seafAccountManager.getCurrentAccount().name, 100)
             ImageLoader.getInstance().displayImage(url, itemImage, getDisplayImageOptions())
-        } else if (item.drawableId>0)
+        } else if (item.drawableId > 0)
             itemImage.setImageDrawable(fragment.resources.getDrawable(item.drawableId))
 
     }

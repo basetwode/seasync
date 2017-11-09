@@ -123,7 +123,7 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
 
         val intent = Intent(Intent.ACTION_VIEW)
 
-        val file = File(File(storage, presenter.currentAccount.name + "/" + repoName), directory)
+        val file = File(File(storage, presenter.currentAccount.name + "/" + repoId), directory)
         val uri = Uri.parse("${file.absolutePath}")
         intent.setDataAndType(uri,"resource/folder")
         startActivity(Intent.createChooser(intent, "Select app to open"))
