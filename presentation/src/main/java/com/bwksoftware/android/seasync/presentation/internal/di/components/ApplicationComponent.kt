@@ -43,6 +43,7 @@ interface ApplicationComponent {
     fun inject(addAccountFragment: AddAccountFragment)
     fun inject(directoryFragment: DirectoryFragment)
     fun inject(imageViewerFragment: ImageViewerFragment)
+    fun inject(downloadFragment: DownloadFragment)
 
     //    val androidApplication: App
 //
