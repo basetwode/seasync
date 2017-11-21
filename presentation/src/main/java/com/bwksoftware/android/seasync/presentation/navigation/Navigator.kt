@@ -77,6 +77,24 @@ class Navigator @Inject constructor() {
 
     }
 
+    fun navigateToDownload(context: Context, fragmentManager: FragmentManager, account: Account,
+                            repoId: String, repoName: String, directory: String) {
+
+        val downloadFragment = DownloadFragment.forAccountRepoAndDir(account, repoId, repoName,
+                directory)
+
+        val transaction = fragmentManager.beginTransaction()
+        // Store the Fragment in stack
+        transaction.addToBackStack(DownloadFragment::class.java.name+directory)
+        //        transaction.setCustomAnimations(R.anim.enter_from_center,R.anim.exit_from_center);
+        transaction.replace(R.id.container, downloadFragment,
+                DownloadFragment::class.java.name+directory).commit()
+        fragmentManager.executePendingTransactions()
+        setName(context, downloadFragment, fragmentManager)
+
+    }
+
+
     fun navigateToReposView(context: Context, fragmentManager: FragmentManager, account: Account) {
         var exercisesFragment = fragmentManager.findFragmentByTag(ReposFragment::class.java.name)
         if (exercisesFragment == null)

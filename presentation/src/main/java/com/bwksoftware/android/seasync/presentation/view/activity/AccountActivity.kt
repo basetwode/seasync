@@ -116,6 +116,13 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
                 repoId, repoName, directory)
     }
 
+    override fun onRemoteFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
+                                     directory: String, storage: String,
+                                     filename: String) {
+        navigator.navigateToDownload(this, fragment.childFragmentManager, presenter.currentAccount,
+                repoId, repoName, directory)
+    }
+
 
     override fun onRevealClicked(fragment: BaseFragment, repoId: String, repoName: String,
                                  directory: String, storage: String,

@@ -135,7 +135,7 @@ class StorageManager @Inject constructor(val context: Context,
             if (responseDownload.isSuccessful) {
                 val file = responseDownload.body() ?: return false
                 val download = SyncManager.DownloadTask(localItem, createFilePath(repo, localItem),
-                        file)
+                        context,file)
                 Thread.sleep(100)
                 val fileDownloadedSuccessful = download.execute().get()
 
@@ -381,8 +381,7 @@ class StorageManager @Inject constructor(val context: Context,
                     }
             cache.writeDirectoryList(currAccount().name, repoHash, newItem!!.path!!, cachedItems,
                     false)
-            val restartObserverIntent = Intent(OnBootReceiver.ACTION_RESTART_CACHE_OBSERVER)
-            context.sendBroadcast(restartObserverIntent)
+
             return newItem
         }
         return null

@@ -50,6 +50,7 @@ class AddAccountPresenter @Inject constructor(private val getAccountToken: GetAc
         }
 
         override fun onError(exception: Throwable) {
+            seafAccountManager.deleteAccount(seafAccountManager.getAccountByName(username)!!.name)
             accountView.onCreateUnsuccessful()
             Log.d("AccountPresenter", "yolo error" + exception.localizedMessage)
         }

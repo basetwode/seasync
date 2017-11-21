@@ -45,6 +45,9 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
         fun onFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
                           directory: String, storage: String, file: String)
 
+        fun onRemoteFileClicked(fragment: BaseFragment, repoId: String, repoName: String,
+                          directory: String, storage: String, file: String)
+
         fun onImageClicked(fragment: BaseFragment, repoId: String, repoName: String,
                            directory: String, file: String)
 
@@ -167,6 +170,10 @@ class DirectoryFragment : BaseFragment(), DirectoryView, DirectoryAdapter.OnItem
                                 arguments.getString(PARAM_REPOID),
                                 arguments.getString(PARAM_DIRECTORY), item.storage!!, item.name)
                     } else {
+                        attachedActivity.onRemoteFileClicked(this,
+                                arguments.getString(PARAM_REPOID),
+                                arguments.getString(PARAM_REPOID),
+                                arguments.getString(PARAM_DIRECTORY), item.storage!!, item.name)
                         directoryPresenter.fileClicked(position, arguments.getString(PARAM_ACCOUNT),
                                 arguments.getString(PARAM_REPOID), item, arguments.getString(
                                 PARAM_DIRECTORY))
