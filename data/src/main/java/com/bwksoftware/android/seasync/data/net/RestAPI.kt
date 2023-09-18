@@ -20,7 +20,7 @@ import com.bwksoftware.android.seasync.data.entity.Account
 import com.bwksoftware.android.seasync.data.entity.Avatar
 import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -30,7 +30,7 @@ import retrofit2.http.*
 interface RestAPI {
 
     companion object {
-        var API_BASE_URL = "https://cloud.bwk-technik.de/api2/"
+        var API_BASE_URL = "https://basetwo.cloud/api2/"
     }
 
     @GET

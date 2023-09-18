@@ -18,7 +18,7 @@ package com.bwksoftware.android.seasync.data.datastore
 import com.bwksoftware.android.seasync.data.entity.Avatar
 import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 
 
 interface DataStore {

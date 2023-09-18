@@ -17,7 +17,7 @@ package com.bwksoftware.android.seasync.domain.interactor
 
 import javax.inject.Inject
 
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 import com.bwksoftware.android.seasync.domain.RepoTemplate
 import com.bwksoftware.android.seasync.domain.executor.PostExecutionThread
 import com.bwksoftware.android.seasync.domain.executor.ThreadExecutor

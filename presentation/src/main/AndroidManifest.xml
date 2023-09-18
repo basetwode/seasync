@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bwksoftware.android.seasync.presentation">
+>
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -24,7 +24,8 @@
         <activity
             android:name=".view.activity.AccountActivity"
             android:hardwareAccelerated="true"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -33,7 +34,7 @@
         </activity>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.bwksoftware.android.seasync.data.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -80,7 +81,8 @@
 
         <receiver
             android:name="com.bwksoftware.android.seasync.data.service.OnBootReceiver"
-            android:enabled="true">
+            android:enabled="true"
+            android:exported="false">>
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

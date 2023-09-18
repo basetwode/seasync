@@ -20,7 +20,7 @@ import com.bwksoftware.android.seasync.domain.AccountTemplate
 import com.bwksoftware.android.seasync.domain.AvatarTemplate
 import com.bwksoftware.android.seasync.domain.ItemTemplate
 import com.bwksoftware.android.seasync.domain.RepoTemplate
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 
 
 interface Repository {

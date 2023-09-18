@@ -17,11 +17,11 @@ package com.bwksoftware.android.seasync.domain.interactor
 
 import com.bwksoftware.android.seasync.domain.executor.PostExecutionThread
 import com.bwksoftware.android.seasync.domain.executor.ThreadExecutor
-import io.reactivex.Observable
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.observers.DisposableObserver
-import io.reactivex.schedulers.Schedulers
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.observers.DisposableObserver
+import io.reactivex.rxjava3.schedulers.Schedulers
 
 /**
  * Abstract class for a Use Case (Interactor in terms of Clean Architecture).
@@ -31,7 +31,7 @@ import io.reactivex.schedulers.Schedulers
  * By convention each UseCase implementation will return the result using a [DisposableObserver]
  * that will execute its job in a background thread and will post the result in the UI thread.
  */
-abstract class UseCase<T, Params> internal constructor(val threadExecutor: ThreadExecutor, val postExecutionThread: PostExecutionThread) {
+abstract class UseCase<T : Any, Params> internal constructor(val threadExecutor: ThreadExecutor, val postExecutionThread: PostExecutionThread) {
     private val disposables: CompositeDisposable = CompositeDisposable()
 
     /**

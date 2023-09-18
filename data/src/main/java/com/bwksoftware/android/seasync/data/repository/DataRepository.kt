@@ -27,7 +27,7 @@ import com.bwksoftware.android.seasync.domain.AvatarTemplate
 import com.bwksoftware.android.seasync.domain.ItemTemplate
 import com.bwksoftware.android.seasync.domain.RepoTemplate
 import com.bwksoftware.android.seasync.domain.repository.Repository
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 import javax.inject.Inject
 
 

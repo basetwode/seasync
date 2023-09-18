@@ -22,16 +22,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.support.design.widget.CoordinatorLayout
-import android.support.v4.app.FragmentManager
-import android.support.v4.content.FileProvider
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
+import androidx.core.content.FileProvider
 import android.util.Log
 import android.view.Gravity
 import android.view.Menu
@@ -40,13 +31,18 @@ import android.view.View
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.RecyclerView
 import com.bwksoftware.android.seasync.data.prefs.SharedPrefsController
 import com.bwksoftware.android.seasync.data.provider.FileRepoContract
 import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.bwksoftware.android.seasync.presentation.App
 import com.bwksoftware.android.seasync.presentation.R
 import com.bwksoftware.android.seasync.presentation.internal.di.components.ActivityComponent
-import com.bwksoftware.android.seasync.presentation.internal.di.components.DaggerActivityComponent
 import com.bwksoftware.android.seasync.presentation.internal.di.modules.ActivityModule
 import com.bwksoftware.android.seasync.presentation.model.Account
 import com.bwksoftware.android.seasync.presentation.model.NavBaseItem
@@ -183,7 +179,7 @@ class AccountActivity : AppCompatActivity(), AccountView, AccountAdapter.OnItemC
                         "com.bwksoftware.android.seasync.data.sync", params)
             }
         }
-        drawerLayout.closeDrawer(Gravity.START)
+        drawerLayout.closeDrawer(GravityCompat.START)
 
         Toast.makeText(app.baseContext, navMenu.findItem(itemId).title,
                 Toast.LENGTH_SHORT).show()

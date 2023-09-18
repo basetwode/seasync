@@ -25,8 +25,9 @@ import com.bwksoftware.android.seasync.data.entity.Item
 import com.bwksoftware.android.seasync.data.entity.Repo
 import com.bwksoftware.android.seasync.data.utils.FileUtils
 import com.google.gson.GsonBuilder
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -57,7 +58,8 @@ class RestApiImpl @Inject constructor(val context: Context) {
 
     fun getAccountToken(username: String, serverAddress: String,
                         password: String): Observable<Account> {
-        val requestBody = RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"),
+        val requestBody = RequestBody.create(
+            "application/x-www-form-urlencoded".toMediaTypeOrNull(),
                 "username=$username&password=$password")
         return service.postAccountToken(parseUrl(serverAddress, "auth-token/"), requestBody)
     }
@@ -108,8 +110,7 @@ class RestApiImpl @Inject constructor(val context: Context) {
 
     fun uploadFile(url: String, authToken: String, parentDir: String, relativeDir: String,
                    file: File): Call<String> {
-        val requestFile = RequestBody.create(
-                MediaType.parse(context.contentResolver.getType(Uri.fromFile(file))),
+        val requestFile = RequestBody.create(context.contentResolver.getType(Uri.fromFile(file))?.toMediaTypeOrNull(),
                 file
         )
         // MultipartBody.Part is used to send also the actual file name
@@ -120,8 +121,8 @@ class RestApiImpl @Inject constructor(val context: Context) {
     fun updateFile(url: String, authToken: String, targetFilePath: String,
                    targetFile: File): Call<String> {
         val requestFile = RequestBody.create(
-                MediaType.parse(FileUtils.getMimeType(
-                        targetFile.name).toString()),
+                FileUtils.getMimeType(
+                        targetFile.name)?.toMediaTypeOrNull(),
                 targetFile
         )
         // MultipartBody.Part is used to send also the actual file name

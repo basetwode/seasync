@@ -19,7 +19,7 @@ import com.bwksoftware.android.seasync.domain.AvatarTemplate
 import com.bwksoftware.android.seasync.domain.executor.PostExecutionThread
 import com.bwksoftware.android.seasync.domain.executor.ThreadExecutor
 import com.bwksoftware.android.seasync.domain.repository.Repository
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 import javax.inject.Inject
 
 /**

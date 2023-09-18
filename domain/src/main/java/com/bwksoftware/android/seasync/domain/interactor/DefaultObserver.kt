@@ -15,7 +15,8 @@
  */
 package com.bwksoftware.android.seasync.domain.interactor
 
-import io.reactivex.observers.DisposableObserver
+import io.reactivex.rxjava3.observers.DisposableObserver
+
 
 /**
  * Default [DisposableObserver] base class to be used whenever you want default error handling.
